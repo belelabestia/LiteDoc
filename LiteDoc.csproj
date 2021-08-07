@@ -3,6 +3,13 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>    
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Balbarak.WeasyPrint" Version="2.0.2" />
+    <PackageReference Include="Markdig" Version="0.25.0" />
+    <PackageReference Include="PdfSharp" Version="1.50.5147" />
+  </ItemGroup>
 
 </Project>

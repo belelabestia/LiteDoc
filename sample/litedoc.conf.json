@@ -1,0 +1,14 @@
+[
+    {
+        "path": "first-page.html",
+        "format": "html"
+    },
+    {
+        "path": "1/doc.md",
+        "format": "md"
+    },
+    {
+        "path": "2/doc.md",
+        "format": "md"
+    }
+]
