@@ -6,22 +6,20 @@ using System.Threading.Tasks;
 
 public class SectionService
 {
-    private string workingPath;
     private ConfigurationService configurationService;
+    private WorkplaceService workplaceService;
     public SectionService(
-        string workingPath,
-        ConfigurationService configurationService
+        ConfigurationService configurationService,
+        WorkplaceService workplaceService
     )
     {
-        this.workingPath = workingPath;
         this.configurationService = configurationService;
+        this.workplaceService = workplaceService;
     }
 
     public async Task<IEnumerable<string>> GetSections()
     {
         var configurations = await this.configurationService.GetConfigurations();
-        var sections = await Task.WhenAll(configurations.Select(conf => File.ReadAllTextAsync(Path.Combine(workingPath, conf.Path!))));
-        if (sections is null || sections.Any(section => section is null)) throw new Exception("Failed reading sections.");
-        return sections;
+        return await Task.WhenAll(configurations.Select(conf => this.workplaceService.ReadText(conf.Path)));
     }
 }

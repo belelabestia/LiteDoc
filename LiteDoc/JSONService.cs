@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -14,9 +15,9 @@ public class JSONService
         this.workplaceService = workplaceService;
         this.jsonSerializerOptions = jsonSerializerOptions;
     }
-    public async Task<T?> Deserialize<T>(string fileName)
+    public async Task<T> Deserialize<T>(string fileName)
     {
-        var json = await this.workplaceService.ReadTextOf(fileName);
-        return JsonSerializer.Deserialize<T>(json, this.jsonSerializerOptions);
+        var json = await this.workplaceService.ReadText(fileName) ?? throw new Exception("No json found.");
+        return JsonSerializer.Deserialize<T>(json, this.jsonSerializerOptions) ?? throw new Exception("Deserialization returned null.");
     }
 }
