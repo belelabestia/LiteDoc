@@ -1,7 +1,12 @@
 ﻿using System.Linq;
+using System.Text.Json;
 
 var workingPath = args.First();
-var configurationService = new ConfigurationService(workingPath);
+var confFileName = "litedoc.conf.json";
+var workplaceService = new WorkplaceService(workingPath);
+var jsonSerializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+var JSONService = new JSONService(workplaceService, jsonSerializerOptions);
+var configurationService = new ConfigurationService(confFileName, JSONService);
 var sectionService = new SectionService(workingPath, configurationService);
 var sectionsParser = new SectionsParser(configurationService, sectionService);
 var sectionsWriter = new SectionsWriter(workingPath, sectionsParser);
