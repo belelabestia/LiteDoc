@@ -5,6 +5,7 @@ public class ConfigurationService
 {
     private string confFileName;
     private JSONService JSONService;
+    private IEnumerable<SectionConfiguration>? cachedSections;
 
     public ConfigurationService(
         string confFileName,
@@ -15,6 +16,6 @@ public class ConfigurationService
         this.JSONService = JSONService;
     }
 
-    public Task<IEnumerable<SectionConfiguration>> GetConfigurations() =>
-        this.JSONService.Deserialize<IEnumerable<SectionConfiguration>>(this.confFileName);
+    public async Task<IEnumerable<SectionConfiguration>> GetConfigurations() =>
+        this.cachedSections ?? await this.JSONService.Deserialize<IEnumerable<SectionConfiguration>>(this.confFileName);
 }
