@@ -5,54 +5,77 @@ using Balbarak.WeasyPrint;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
-public class PDFWriter
+public class PdfDocumentWritten { }
+
+public class PdfSectionsWritten
 {
-    private ConfigurationService configurationService;
-    private WorkplaceService workplaceService;
-    private SectionsWriter sectionsWriter;
-    public PDFWriter(
-        ConfigurationService configurationService,
-        WorkplaceService workplaceService,
-        SectionsWriter sectionsWriter
-    )
+    public int Count { get; }
+    private WorkSpace workSpace;
+    public PdfSectionsWritten(int count, WorkSpace workSpace)
     {
-        this.configurationService = configurationService;
-        this.workplaceService = workplaceService;
-        this.sectionsWriter = sectionsWriter;
+        this.Count = count;
+        this.workSpace = workSpace;
     }
-
-    public async Task WriteDocument()
+    public PdfDocumentWritten WriteDocument()
     {
-        await this.WriteSections();
-        var parsedSections = await this.configurationService.GetConfigurations();
-
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var final = new PdfDocument();
 
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-        for (int i = 0; i < parsedSections.Count(); i++)
+        for (int i = 0; i < this.Count; i++)
         {
-            var document = PdfReader.Open(this.workplaceService.GetPathOf($"dist/section{i}.pdf"), PdfDocumentOpenMode.Import);
+            var document = PdfReader.Open(this.workSpace.MoveTo($"dist/section{i}.pdf").WorkingPath, PdfDocumentOpenMode.Import);
             foreach (var page in document.Pages)
             {
                 final.AddPage(page);
             }
         }
 
-        final.Save(this.workplaceService.GetPathOf("dist/output.pdf"));
+        final.Save(this.workSpace.MoveTo("dist/output.pdf").WorkingPath);
+
+        return new PdfDocumentWritten();
+    }
+}
+
+public static class PdfSectionsWrittenExtensions
+{
+    public static PdfSectionsWritten ToPdfSectionsWritten(this (int count, WorkSpace workSpace) deps) => new PdfSectionsWritten(deps.count, deps.workSpace);
+}
+
+public class PdfWriter
+{
+    private Configuration configuration;
+    private WorkSpace workSpace;
+    private Html html;
+    public PdfWriter(
+        Configuration configuration,
+        WorkSpace workSpace,
+        Html html
+    )
+    {
+        this.configuration = configuration;
+        this.workSpace = workSpace;
+        this.html = html;
     }
 
-    public async Task WriteSections()
-    {
-        await this.sectionsWriter.WriteSections();
-        var sectionsCount = (await this.configurationService.GetConfigurations()).Count();
+    public async Task<PdfDocumentWritten> WriteDocument() => (await this.WriteSections()).WriteDocument();
 
-        for (int i = 0; i < sectionsCount; i++)
+    public async Task<PdfSectionsWritten> WriteSections()
+    {
+        var result = await this.html.WriteSections();
+
+        for (int i = 0; i < result.Count; i++)
         {
             using var weasy = new WeasyPrintClient();
-            var html = await this.workplaceService.ReadText($"dist/section{i}.html");
+            var html = await this.workSpace.MoveTo($"dist/section{i}.html").ReadText();
             var bytes = await weasy.GeneratePdfAsync(html);
-            await this.workplaceService.WriteBytes($"dist/section{i}.pdf", bytes);
+            await this.workSpace.MoveTo($"dist/section{i}.pdf").Write(bytes);
         }
+
+        return (result.Count, this.workSpace).ToPdfSectionsWritten();
     }
+}
+
+public static class PdfWriterExtensions
+{
+    public static PdfWriter ToPdfWriter(this (Configuration configuration, WorkSpace workSpace, Html html) deps) => new PdfWriter(deps.configuration, deps.workSpace, deps.html);
 }

@@ -2,9 +2,9 @@ using System.Text;
 
 public class PDFService
 {
-    private WorkplaceService workplaceService;
+    private WorkSpace workplaceService;
     public PDFService(
-        WorkplaceService workplaceService
+        WorkSpace workplaceService
     )
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
