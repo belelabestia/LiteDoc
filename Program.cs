@@ -1,2 +1,2 @@
-﻿var rootPath = args[0];
-await new LiteDoc().Run(args[0]);
+﻿args[0].ToLiteDoc().Run();
+args[0].ToLiteDoc().StartWatching();

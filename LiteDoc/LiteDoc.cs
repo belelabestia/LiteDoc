@@ -1,11 +1,21 @@
+using System;
 using System.Threading.Tasks;
 
-// Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-public class LiteDoc
+public record LiteDoc(string rootPath)
 {
-    public Task Run(string rootPath) => rootPath
+    public Task Run() => rootPath
         .GetConfigurations()
         .ToSections(rootPath.MovePathTo("src"))
-        .WriteDocument(rootPath.MovePathTo("dist/output.pdf"));
+        .WriteDocument(rootPath.MovePathTo("dist"), "output.pdf");
+
+    public void StartWatching()
+    {
+        rootPath.MovePathTo("src").WatchPath(() => Run());
+        Console.ReadLine();
+    }
+}
+
+public static class LiteDocImpl
+{
+    public static LiteDoc ToLiteDoc(this string rootPath) => new LiteDoc(rootPath);
 }
