@@ -20,6 +20,17 @@ Prima di generare i PDF delle sezioni, devo prevedere la possibilità di inserir
 
 Qui ci sarà da studiare un pochino come fare.
 
+## Pipeline
+
+```
+Configuration.SectionConfigurations => ForEach => (
+    (Content.SectionContent, Format.SectionParser) =>
+    Parser.SectionParsed =>
+    HtmlWriter.SectionHtmlWritten =>
+    PdfWriter.SectionPdfWritten =>
+) => PdfConcat.DocumentPdfWritten;
+```
+
 ## Funzionalità
 
 - _LiteDoc_ lavora in una cartella e usa un file di configurazione per recuperare i percorsi del progetto.

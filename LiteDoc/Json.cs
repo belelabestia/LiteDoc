@@ -1,31 +1,17 @@
-using System;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-public class Json
+public interface IJson
 {
-    private WorkSpace workSpace;
-    private JsonSerializerOptions options;
-
-    public Json(
-        WorkSpace workSpace,
-        JsonSerializerOptions options
-    )
-    {
-        this.workSpace = workSpace;
-        this.options = options;
-    }
-
-    public Json(WorkSpace workplaceService) => this.workSpace = workplaceService;
-    public async Task<T> Deserialize<T>(string fileName)
-    {
-        var json = await this.workSpace.MoveTo(fileName).ReadText() ?? throw new Exception("No json found.");
-        return JsonSerializer.Deserialize<T>(json, this.options) ?? throw new Exception("Deserialization returned null.");
-    }
+    T Deserialize<T>(string json, JsonSerializerOptions options);
 }
 
-public static class JsonServiceExtensions
+public static class Json
 {
-    public static Json ToJson(this WorkSpace workSpace) => new Json(workSpace, LiteDocDefault.JsonSerializerOptions);
-    public static Json ToJson(this WorkSpace workSpace, JsonSerializerOptions options) => new Json(workSpace, options);
+    public static JsonSerializerOptions DefaultOptions => new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    public static Default Instance = new Default();
+    public class Default : IJson
+    {
+        public T Deserialize<T>(string json, JsonSerializerOptions options) => JsonSerializer.Deserialize<T>(json, options)!;
+    }
+    public static T Deserialize<T>(this string json, JsonSerializerOptions options) => Instance.Deserialize<T>(json, options);
 }
