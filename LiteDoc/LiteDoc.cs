@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 
 public record LiteDoc(string rootPath)
@@ -8,11 +7,7 @@ public record LiteDoc(string rootPath)
         .ToSections(rootPath.MovePathTo("src"))
         .WriteDocument(rootPath.MovePathTo("dist"), "output.pdf");
 
-    public void StartWatching()
-    {
-        rootPath.MovePathTo("src").WatchPath(() => Run());
-        Console.ReadLine();
-    }
+    public Task StartWatching() => rootPath.MovePathTo("src").WatchPath(() => Run());
 }
 
 public static class LiteDocImpl

@@ -1,2 +1,2 @@
-﻿args[0].ToLiteDoc().Run();
-args[0].ToLiteDoc().StartWatching();
+﻿// await args[0].ToLiteDoc().Run();
+await args[0].ToLiteDoc().StartWatching();
