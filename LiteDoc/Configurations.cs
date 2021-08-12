@@ -9,7 +9,7 @@ public interface IConfiguration
 public static class Configurations
 {
     public const string DefaultFileName = "litedoc.conf.json";
-    public static Default Instance = new Default();
+    public static IConfiguration Instance = new Default();
     public class Default : IConfiguration
     {
         public Task<IEnumerable<Configuration>> GetConfigurations(string rootPath) => rootPath

@@ -10,7 +10,7 @@ public interface IWatcher
 
 public static class Watcher
 {
-    public static Default Instance = new Default();
+    public static IWatcher Instance = new Default();
     public class Default : IWatcher
     {
         public Task WatchPath(string srcPath, Func<Task> handler)

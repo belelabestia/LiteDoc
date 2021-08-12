@@ -18,7 +18,7 @@ public interface ISections
 
 public static class Sections
 {
-    public static Default Instance = new Default();
+    public static ISections Instance = new Default();
 
     public class Default : ISections
     {

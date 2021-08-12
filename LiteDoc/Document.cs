@@ -11,7 +11,7 @@ public interface IDocument
 
 public static class Document
 {
-    public static Default Instance = new Default();
+    public static IDocument Instance = new Default();
     public class Default : IDocument
     {
         public Task WriteDocument(PdfDocument[] sections, string outputPath, string fileName) => sections
