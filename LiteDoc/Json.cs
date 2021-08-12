@@ -8,10 +8,9 @@ public interface IJson
 public static class Json
 {
     public static JsonSerializerOptions DefaultOptions => new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-    public static IJson Instance = new Default();
-    public class Default : IJson
+    public class Base : IJson
     {
         public T Deserialize<T>(string json, JsonSerializerOptions options) => JsonSerializer.Deserialize<T>(json, options)!;
     }
-    public static T Deserialize<T>(this string json, JsonSerializerOptions options) => Instance.Deserialize<T>(json, options);
+    public static T Deserialize<T>(this string json, JsonSerializerOptions options) => Resources.Get<IJson>()!.Deserialize<T>(json, options);
 }

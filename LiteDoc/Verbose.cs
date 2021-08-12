@@ -21,16 +21,16 @@ public static class _
     }
 }
 
-public class VerboseConfiguration : Configurations.Default, IConfiguration
+public class VerboseConfiguration : Configuration.Base, IConfiguration
 {
-    public new Task<IEnumerable<Configuration>> GetConfigurations(string rootPath)
+    public new Task<IEnumerable<Configuration.Model>> GetConfigurations(string rootPath)
     {
         Console.WriteLine(_.Name());
         return base.GetConfigurations(rootPath);
     }
 }
 
-public class VerboseDocument : Document.Default, IDocument
+public class VerboseDocument : Document.Base, IDocument
 {
     public new Task WriteDocument(PdfDocument[] sections, string outputPath, string fileName)
     {
@@ -39,7 +39,7 @@ public class VerboseDocument : Document.Default, IDocument
     }
 }
 
-public class VerboseFileSystem : FileSystem.Default, IFileSystem
+public class VerboseFileSystem : FileSystem.Base, IFileSystem
 {
     public new Task<string> GetText(string path)
     {
@@ -66,7 +66,7 @@ public class VerboseFileSystem : FileSystem.Default, IFileSystem
     }
 }
 
-public class VerboseJson : Json.Default, IJson
+public class VerboseJson : Json.Base, IJson
 {
     public new T Deserialize<T>(string json, JsonSerializerOptions options)
     {
@@ -75,7 +75,7 @@ public class VerboseJson : Json.Default, IJson
     }
 }
 
-public class VerboseSections : Sections.Default, ISections
+public class VerboseSections : Sections.Base, ISections
 {
     public new string ToHtml(string content, string format)
     {
@@ -95,14 +95,14 @@ public class VerboseSections : Sections.Default, ISections
         return base.ToPdfDocument(stream);
     }
 
-    public new Task<PdfDocument[]> ToSections(IEnumerable<Configuration> configurations, string srcPath)
+    public new Task<PdfDocument[]> ToSections(IEnumerable<Configuration.Model> configurations, string srcPath)
     {
         Console.WriteLine(_.Name());
         return base.ToSections(configurations, srcPath);
     }
 }
 
-public class VerboseWatcher : Watcher.Default, IWatcher
+public class VerboseWatcher : Watcher.Base, IWatcher
 {
     public new Task WatchPath(string srcPath, Func<Task> handler)
     {

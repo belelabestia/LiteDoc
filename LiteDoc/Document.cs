@@ -11,8 +11,7 @@ public interface IDocument
 
 public static class Document
 {
-    public static IDocument Instance = new Default();
-    public class Default : IDocument
+    public class Base : IDocument
     {
         public Task WriteDocument(PdfDocument[] sections, string outputPath, string fileName) => sections
             .ToDocument()
@@ -21,7 +20,7 @@ public static class Document
     }
 
     public static Task WriteDocument(this Task<PdfDocument[]> sections, string outputPath, string fileName) => sections.FlatMap(secs => secs.WriteDocument(outputPath, fileName));
-    private static Task WriteDocument(this PdfDocument[] sections, string outputPath, string fileName) => Instance.WriteDocument(sections, outputPath, fileName);
+    private static Task WriteDocument(this PdfDocument[] sections, string outputPath, string fileName) => Resources.Get<IDocument>()!.WriteDocument(sections, outputPath, fileName);
     private static PdfDocument ToDocument(this PdfDocument[] sections) => sections.Aggregate(new PdfDocument(), (partial, section) => partial.AddSection(section));
 
     private static PdfDocument AddSection(this PdfDocument document, PdfDocument section)

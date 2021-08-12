@@ -3,20 +3,19 @@ using System.Threading.Tasks;
 
 public interface IConfiguration
 {
-    Task<IEnumerable<Configuration>> GetConfigurations(string rootPath);
+    Task<IEnumerable<Configuration.Model>> GetConfigurations(string rootPath);
 }
 
-public static class Configurations
+public static class Configuration
 {
     public const string DefaultFileName = "litedoc.conf.json";
-    public static IConfiguration Instance = new Default();
-    public class Default : IConfiguration
+    public class Base : IConfiguration
     {
-        public Task<IEnumerable<Configuration>> GetConfigurations(string rootPath) => rootPath
+        public Task<IEnumerable<Model>> GetConfigurations(string rootPath) => rootPath
             .MovePathTo(DefaultFileName)
             .GetText()
-            .Map(json => json.Deserialize<IEnumerable<Configuration>>(Json.DefaultOptions));
+            .Map(json => json.Deserialize<IEnumerable<Model>>(Json.DefaultOptions));
     }
-    public static Task<IEnumerable<Configuration>> GetConfigurations(this string rootPath) => Instance.GetConfigurations(rootPath);
+    public static Task<IEnumerable<Model>> GetConfigurations(this string rootPath) => Resources.Get<IConfiguration>()!.GetConfigurations(rootPath);
+    public record Model(string Path, string Format);
 }
-public record Configuration(string Path, string Format);

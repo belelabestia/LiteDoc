@@ -12,17 +12,15 @@ public interface ISections
 {
     string ToHtml(string content, string format);
     Task<byte[]> ToPdf(string html);
-    Task<PdfDocument[]> ToSections(IEnumerable<Configuration> configurations, string srcPath);
+    Task<PdfDocument[]> ToSections(IEnumerable<Configuration.Model> configurations, string srcPath);
     PdfDocument ToPdfDocument(Stream stream);
 }
 
 public static class Sections
 {
-    public static ISections Instance = new Default();
-
-    public class Default : ISections
+    public class Base : ISections
     {
-        public Task<PdfDocument[]> ToSections(IEnumerable<Configuration> configurations, string srcPath) => configurations
+        public Task<PdfDocument[]> ToSections(IEnumerable<Configuration.Model> configurations, string srcPath) => configurations
             .Select(configuration => srcPath
                 .MovePathTo(configuration.Path)
                 .GetText()
@@ -47,9 +45,9 @@ public static class Sections
         public PdfDocument ToPdfDocument(Stream stream) => PdfReader.Open(stream, PdfDocumentOpenMode.Import);
     }
 
-    public static Task<PdfDocument[]> ToSections(this IEnumerable<Configuration> configurations, string srcPath) => Instance.ToSections(configurations, srcPath);
-    public static Task<PdfDocument[]> ToSections(this Task<IEnumerable<Configuration>> configurations, string srcPath) => configurations.FlatMap(confs => confs.ToSections(srcPath));
-    private static string ToHtml(this string content, string format) => Instance.ToHtml(content, format);
-    private static Task<byte[]> ToPdf(this string html) => Instance.ToPdf(html);
-    public static PdfDocument ToPdfDocument(this Stream stream) => Instance.ToPdfDocument(stream);
+    public static Task<PdfDocument[]> ToSections(this IEnumerable<Configuration.Model> configurations, string srcPath) => Resources.Get<ISections>()!.ToSections(configurations, srcPath);
+    public static Task<PdfDocument[]> ToSections(this Task<IEnumerable<Configuration.Model>> configurations, string srcPath) => configurations.FlatMap(confs => confs.ToSections(srcPath));
+    private static string ToHtml(this string content, string format) => Resources.Get<ISections>()!.ToHtml(content, format);
+    private static Task<byte[]> ToPdf(this string html) => Resources.Get<ISections>()!.ToPdf(html);
+    public static PdfDocument ToPdfDocument(this Stream stream) => Resources.Get<ISections>()!.ToPdfDocument(stream);
 }

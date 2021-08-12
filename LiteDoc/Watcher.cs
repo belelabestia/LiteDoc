@@ -10,8 +10,7 @@ public interface IWatcher
 
 public static class Watcher
 {
-    public static IWatcher Instance = new Default();
-    public class Default : IWatcher
+    public class Base : IWatcher
     {
         public Task WatchPath(string srcPath, Func<Task> handler)
         {
@@ -21,7 +20,7 @@ public static class Watcher
                 .StartWatching();
         }
     }
-    public static Task WatchPath(this string srcPath, Func<Task> handler) => Instance.WatchPath(srcPath, handler);
+    public static Task WatchPath(this string srcPath, Func<Task> handler) => Resources.Get<IWatcher>()!.WatchPath(srcPath, handler);
 
     private static FileSystemWatcher GetFileSystemWatcher(this string srcPath, Func<Task> handler)
     {
