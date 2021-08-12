@@ -38,3 +38,12 @@ Configuration.SectionConfigurations => ForEach => (
 - **Rende** un pdf con tutti i documenti concatenati e stilizzati.
 - _LiteDoc_ può anche essere utilizzato per generare una nuova cartella di progetto.
 - **Usa** weasyprint o wkhtmltopdf per generare i pdf
+
+## Idee future
+
+- Aprire automaticamente l'output nel browser e riavviarlo automaticamente.
+
+## Altri obiettivi
+
+- Refactoring
+- Usare dependency injection nativa

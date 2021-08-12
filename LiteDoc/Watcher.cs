@@ -15,6 +15,7 @@ public static class Watcher
         public Task WatchPath(string srcPath, Func<Task> handler)
         {
             Console.WriteLine($"Started watching on path {srcPath}");
+            
             return srcPath
                 .GetFileSystemWatcher(handler)
                 .StartWatching();

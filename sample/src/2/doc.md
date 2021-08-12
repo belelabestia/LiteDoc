@@ -1,12 +1,10 @@
 <style>
-    @page {
-        @top-center {
-            content: element(header);
-        }
+    @top-center {
+        content: element(header);
+    }
 
-        @bottom-center {
-            content: element(footer);
-        }
+    @bottom-center {
+        content: element(footer);
     }
 
     .header {
@@ -26,7 +24,7 @@
     }
 </style>
 
-<div class="header blue-bg">Doc 2 Header</div>
+<div class="header blue-bg">This is</div>
 <div class="footer yellow-bg">Doc 2 Footer</div>
 
 # Doc 2

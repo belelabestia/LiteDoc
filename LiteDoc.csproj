@@ -1,15 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <Nullable>enable</Nullable>    
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>litedoc</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Balbarak.WeasyPrint" Version="2.0.2" />
     <PackageReference Include="Markdig" Version="0.25.0" />
     <PackageReference Include="PdfSharp" Version="1.50.5147" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.0.0-beta2" />
+    <PackageReference Include="Selenium.WebDriver.MSEdgeDriver" Version="92.0.902.62" />
   </ItemGroup>
-
 </Project>

@@ -18,4 +18,5 @@ public static class Configuration
     }
     public static Task<IEnumerable<Model>> GetConfigurations(this string rootPath) => Resources.Get<IConfiguration>()!.GetConfigurations(rootPath);
     public record Model(string Path, string Format);
+
 }
