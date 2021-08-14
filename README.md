@@ -1,6 +1,6 @@
 # LiteDoc
 
-Uno strumento per generare la tua documentazione ufficiale usando HTML e CSS.
+LiteDoc trasforma la tua documentazione HTML e Markdown in un unico PDF pronto per la stampa.
 
 ## Funzionalità
 
