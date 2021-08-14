@@ -34,3 +34,4 @@ Il progetto non è ancora completo, questa è l'agenda che ho pensato per ora:
 - [ ] Usare .NET Generic Host per avere Dependency Injection nativa e miglior supporto per l'application lifetime.
 - [ ] Trovare un sistema efficace per aprire e riavviare il browser ogni volta che l'output viene aggiornato.
 - [ ] Realizzare la creazione di un nuovo progetto.
+- [ ] Aggiungere margine di configurabilità, tramite i parametri e/o tramite configurazione.
