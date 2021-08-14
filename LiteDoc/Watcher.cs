@@ -5,26 +5,20 @@ using System.Threading.Tasks;
 
 public interface IWatcher
 {
-    Task WatchPath(string srcPath, Func<Task> handler);
+    Task WatchPath(string srcPath, Func<string, Task> handler);
 }
 
-public static class Watcher
+public class Watcher : IWatcher
 {
-    public class Base : IWatcher
+    public Task WatchPath(string srcPath, Func<string, Task> handler)
     {
-        public Task WatchPath(string srcPath, Func<Task> handler)
-        {
-            Console.WriteLine($"Started watching on path {srcPath}");
-            
-            return srcPath
-                .GetFileSystemWatcher(handler)
-                .StartWatching();
-        }
+        Console.WriteLine($"Started watching on path {srcPath}");
+
+        var watcher = this.GetFileSystemWatcher(srcPath, handler);
+        return this.StartWatching(watcher);
     }
 
-    public static Task WatchPath(this string srcPath, Func<Task> handler) => Resources.Get<IWatcher>()!.WatchPath(srcPath, handler);
-
-    private static FileSystemWatcher GetFileSystemWatcher(this string srcPath, Func<Task> handler)
+    private FileSystemWatcher GetFileSystemWatcher(string srcPath, Func<string, Task> handler)
     {
         var watcher = new FileSystemWatcher(srcPath);
 
@@ -35,8 +29,8 @@ public static class Watcher
             inUse = true;
             Console.WriteLine("Starting pipeline");
 
-            await e.FullPath.WaitFileFree();
-            await handler();
+            await this.WaitFileFree(e.FullPath);
+            await handler(srcPath);
 
             Console.WriteLine("Pipeline succeded.");
             inUse = false;
@@ -46,19 +40,19 @@ public static class Watcher
         return watcher;
     }
 
-    private static Task StartWatching(this FileSystemWatcher watcher)
+    private Task StartWatching(FileSystemWatcher watcher)
     {
         watcher.EnableRaisingEvents = true;
         return Task.Delay(Timeout.Infinite);
     }
 
-    private static Task WaitFileFree(this string path) => Task.Run(() =>
+    private Task WaitFileFree(string path) => Task.Run(() =>
     {
-        while (!IsFileFree(path)) { }
+        while (!this.IsFileFree(path)) { }
         return;
     });
 
-    private static bool IsFileFree(this string path)
+    private bool IsFileFree(string path)
     {
         try
         {

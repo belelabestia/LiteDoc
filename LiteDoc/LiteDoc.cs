@@ -1,21 +1,37 @@
 using System.Threading.Tasks;
 
-public static class LiteDoc
+public class LiteDoc
 {
-    public record Base(string rootPath)
+    private IConfigurationService configurationService;
+    private ISectionService sectionService;
+    private IDocumentService documentService;
+    private IFileSystemService fileSystemService;
+    private IWatcher watcher;
+
+    public LiteDoc(IConfigurationService configurationService, ISectionService sectionService, IDocumentService documentService, IFileSystemService fileSystemService, IWatcher watcher)
     {
-        public Task Run() => rootPath
-            .GetConfigurations()
-            .ToSections(rootPath.MovePathTo("src"))
-            .WriteDocument(rootPath.MovePathTo("dist"), "output.pdf");
-
-        public Task Watch() => rootPath
-            .MovePathTo("src")
-            .WatchPath(this.Run);
-
-        // TODO creates a new space with conf file and sample init files
-        public Task New() => Task.CompletedTask;
+        this.configurationService = configurationService;
+        this.sectionService = sectionService;
+        this.documentService = documentService;
+        this.fileSystemService = fileSystemService;
+        this.watcher = watcher;
     }
 
-    public static Base ToLiteDoc(this string rootPath) => new Base(rootPath);
+    public async Task Run(string rootPath)
+    {
+        var configurations = await this.configurationService.GetConfigurations(rootPath);
+        var sections = await this.sectionService.ToSections(configurations, this.fileSystemService.MovePathTo(rootPath, "src"));
+        await this.documentService.WriteDocument(sections, this.fileSystemService.MovePathTo(rootPath, "dist"), "output.pdf");
+    }
+
+    public Task Watch(string rootPath)
+    {
+        var srcPath = this.fileSystemService.MovePathTo(rootPath, "src");
+        return this.watcher.WatchPath(srcPath, this.Run);
+    }
+
+    public Task New(string rootPath)
+    {
+        return Task.CompletedTask;
+    }
 }

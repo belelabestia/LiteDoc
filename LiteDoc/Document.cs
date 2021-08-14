@@ -4,32 +4,30 @@ using System.Text;
 using System.Threading.Tasks;
 using PdfSharp.Pdf;
 
-public interface IDocument
+public interface IDocumentService
 {
     Task WriteDocument(PdfDocument[] sections, string outputPath, string fileName);
 }
 
-public static class Document
+public class DocumentService : IDocumentService
 {
-    public class Base : IDocument
+    private IFileSystemService fileSystem;
+    public DocumentService(IFileSystemService fileSystem) => this.fileSystem = fileSystem;
+
+    public Task WriteDocument(PdfDocument[] sections, string outputPath, string fileName)
     {
-        public Task WriteDocument(PdfDocument[] sections, string outputPath, string fileName) => sections
-            .ToDocument()
-            .AsByteArray()
-            .Save(outputPath, fileName);
+        var document = sections.Aggregate(new PdfDocument(), (partial, section) => this.AddSection(partial, section));
+        var bytes = this.AsByteArray(document);
+        return this.fileSystem.Save(bytes, outputPath, fileName);
     }
 
-    public static Task WriteDocument(this Task<PdfDocument[]> sections, string outputPath, string fileName) => sections.FlatMap(secs => secs.WriteDocument(outputPath, fileName));
-    private static Task WriteDocument(this PdfDocument[] sections, string outputPath, string fileName) => Resources.Get<IDocument>()!.WriteDocument(sections, outputPath, fileName);
-    private static PdfDocument ToDocument(this PdfDocument[] sections) => sections.Aggregate(new PdfDocument(), (partial, section) => partial.AddSection(section));
-
-    private static PdfDocument AddSection(this PdfDocument document, PdfDocument section)
+    private PdfDocument AddSection(PdfDocument document, PdfDocument section)
     {
         foreach (var page in section.Pages) document.AddPage(page);
         return document;
     }
 
-    private static byte[] AsByteArray(this PdfDocument document)
+    private byte[] AsByteArray(PdfDocument document)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var stream = new MemoryStream();

@@ -8,46 +8,49 @@ using Markdig;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
-public interface ISections
+public interface ISectionService
 {
     string ToHtml(string content, string format);
     Task<byte[]> ToPdf(string html);
-    Task<PdfDocument[]> ToSections(IEnumerable<Configuration.Model> configurations, string srcPath);
+    Task<PdfDocument[]> ToSections(IEnumerable<Configuration> configurations, string srcPath);
     PdfDocument ToPdfDocument(Stream stream);
 }
 
-public static class Sections
+public class SectionService : ISectionService
 {
-    public class Base : ISections
+    private IFileSystemService fileSystemService;
+    public SectionService(IFileSystemService fileSystemService) => this.fileSystemService = fileSystemService;
+
+    public string ToHtml(string content, string format) => format switch
     {
-        public Task<PdfDocument[]> ToSections(IEnumerable<Configuration.Model> configurations, string srcPath) => configurations
-            .Select(configuration => srcPath
-                .MovePathTo(configuration.Path)
-                .GetText()
-                .FlatMap(text => text.ToHtml(configuration.Format).ToPdf())
-                .Map(pdf => pdf.ToMemoryStream().ToPdfDocument())
-            )
-            .ToTask();
+        "html" => content + Environment.NewLine,
+        "md" => Markdown.ToHtml(content),
+        _ => throw new Exception("Invalid format.")
+    };
 
-        public string ToHtml(string content, string format) => format switch
-        {
-            "html" => content + Environment.NewLine,
-            "md" => Markdown.ToHtml(content),
-            _ => throw new Exception("Invalid format.")
-        };
-
-        public Task<byte[]> ToPdf(string html)
-        {
-            using var weasy = new WeasyPrintClient();
-            return weasy.GeneratePdfAsync(html);
-        }
-
-        public PdfDocument ToPdfDocument(Stream stream) => PdfReader.Open(stream, PdfDocumentOpenMode.Import);
+    public Task<byte[]> ToPdf(string html)
+    {
+        using var weasy = new WeasyPrintClient();
+        return weasy.GeneratePdfAsync(html);
     }
 
-    public static Task<PdfDocument[]> ToSections(this IEnumerable<Configuration.Model> configurations, string srcPath) => Resources.Get<ISections>()!.ToSections(configurations, srcPath);
-    public static Task<PdfDocument[]> ToSections(this Task<IEnumerable<Configuration.Model>> configurations, string srcPath) => configurations.FlatMap(confs => confs.ToSections(srcPath));
-    private static string ToHtml(this string content, string format) => Resources.Get<ISections>()!.ToHtml(content, format);
-    private static Task<byte[]> ToPdf(this string html) => Resources.Get<ISections>()!.ToPdf(html);
-    public static PdfDocument ToPdfDocument(this Stream stream) => Resources.Get<ISections>()!.ToPdfDocument(stream);
+    public PdfDocument ToPdfDocument(Stream stream) => PdfReader.Open(stream, PdfDocumentOpenMode.Import);
+
+    public async Task<PdfDocument[]> ToSections(IEnumerable<Configuration> configurations, string srcPath)
+    {
+        var tasks = configurations
+            .Select(async configuration =>
+            {
+                var path = this.fileSystemService.MovePathTo(srcPath, configuration.Path);
+                var text = await this.fileSystemService.GetText(path);
+                var html = this.ToHtml(text, configuration.Format);
+                var pdf = await this.ToPdf(html);
+                var stream = this.fileSystemService.ToMemoryStream(pdf);
+                var section = this.ToPdfDocument(stream);
+                return section;
+            });
+
+        var sections = await Task.WhenAll(tasks);
+        return sections;
+    }
 }
