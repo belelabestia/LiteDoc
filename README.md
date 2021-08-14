@@ -17,6 +17,8 @@ Attualmente LiteDoc supporta i seguenti formati:
 - HTML
 - Markdown
 
+Il formato di output è PDF.
+
 ## OSS di terze parti
 
 LiteDoc esiste grazie a:
