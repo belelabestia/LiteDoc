@@ -3,17 +3,15 @@ using System.Collections.Generic;
 
 public static class Resources
 {
-    private static Dictionary<Type, Type> constructors;
-    static Resources()
+    private static Dictionary<Type, Type> constructors = new Dictionary<Type, Type>()
     {
-        constructors = new Dictionary<Type, Type>();
-        constructors.Add(typeof(IConfiguration), typeof(Configuration.Base));
-        constructors.Add(typeof(IDocument), typeof(Document.Base));
-        constructors.Add(typeof(IFileSystem), typeof(FileSystem.Base));
-        constructors.Add(typeof(IJson), typeof(Json.Base));
-        constructors.Add(typeof(ISections), typeof(Sections.Base));
-        constructors.Add(typeof(IWatcher), typeof(Watcher.Base));
-    }
+        [typeof(IConfiguration)] = typeof(Configuration.Base),
+        [typeof(IDocument)] = typeof(Document.Base),
+        [typeof(IFileSystem)] = typeof(FileSystem.Base),
+        [typeof(IJson)] = typeof(Json.Base),
+        [typeof(ISections)] = typeof(Sections.Base),
+        [typeof(IWatcher)] = typeof(Watcher.Base)
+    };
 
     public static T? Get<T>() => constructors.GetValueOrDefault(typeof(T))!.GetInstance<T>();
     public static void Use<TInterface, TClass>() where TClass : TInterface, new() => constructors[typeof(TInterface)] = typeof(TClass);
