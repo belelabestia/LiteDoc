@@ -1,49 +1,34 @@
 # LiteDoc
 
-Quella che doveva essere una semplice web app ora diventa uno strumento da riga di comando.
-
-## Note
-
-Sono riuscito a prendere la configurazione, recuperare i documenti, parsare ciò che è da parsare, creare e concatenare i PDF.
-
-L'obiettivo attuale è strutturare una buona architettura da poi estendere.
-
-### Gestione errori
-
-Ho creato un tipo IOption e un'interfaccia IValidatable per gestire validazioni e possibili errori; andrò avanti ad espanderlo man mano che ne riscontro l'utilità.
-
-Sicuramente anche questa parte può essere migliorata. Non mi piace tanto l'approccio con la classe statica che implementa le funzioni e poi le estensioni che ne riprendono i metodi; avere una sola implementazione (gli extension method mi piacciono di più) sarebbe decisamente meglio.
-
-### Trasformazione delle sezioni
-
-Prima di generare i PDF delle sezioni, devo prevedere la possibilità di inserire delle trasformazioni per le stesse, con eventualmente delle parti di configurazione dedicate.
-
-Qui ci sarà da studiare un pochino come fare.
-
-## Pipeline
-
-```
-Configuration.SectionConfigurations => ForEach => (
-    (Content.SectionContent, Format.SectionParser) =>
-    Parser.SectionParsed =>
-    HtmlWriter.SectionHtmlWritten =>
-    PdfWriter.SectionPdfWritten =>
-) => PdfConcat.DocumentPdfWritten;
-```
+Uno strumento per generare la tua documentazione ufficiale usando HTML e CSS.
 
 ## Funzionalità
 
-- _LiteDoc_ lavora in una cartella e usa un file di configurazione per recuperare i percorsi del progetto.
-- **Prende** la configurazione e tutti i file.
-- **Rende** un pdf con tutti i documenti concatenati e stilizzati.
-- _LiteDoc_ può anche essere utilizzato per generare una nuova cartella di progetto.
-- **Usa** weasyprint o wkhtmltopdf per generare i pdf
+Crea uno _spazio di lavoro_, aggiusta la configurazione e inizia subito a lavorare sui tuoi documenti.
 
-## Idee future
+LiteDoc supporta la creazione di più sezioni di diversi formati e supporta nativamente le regole CSS dedicate alla stampa, grazie a Weasyprint.
 
-- Aprire automaticamente l'output nel browser e riavviarlo automaticamente.
+LiteDoc può rimanere in ascolto su una cartella e aggiornare automaticamente il risultato definitivo dei tuoi documenti.
 
-## Altri obiettivi
+## Formati supportati
 
-- Refactoring
-- Usare dependency injection nativa
+Attualmente LiteDoc supporta i seguenti formati:
+
+- HTML
+- Markdown
+
+## OSS di terze parti
+
+LiteDoc esiste grazie a:
+
+- PdfSharp
+- Weasyprint
+- Markdig
+
+## Tabella di marcia
+
+Il progetto non è ancora completo, questa è l'agenda che ho pensato per ora:
+
+- [ ] Usare .NET Generic Host per avere Dependency Injection nativa e miglior supporto per l'application lifetime.
+- [ ] Trovare un sistema efficace per aprire e riavviare il browser ogni volta che l'output viene aggiornato.
+- [ ] Realizzare la creazione di un nuovo progetto.
