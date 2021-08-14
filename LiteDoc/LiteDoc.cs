@@ -1,19 +1,21 @@
 using System.Threading.Tasks;
 
-public record LiteDoc(string rootPath)
+public static class LiteDoc
 {
-    public async Task Run()
+    public record Base(string rootPath)
     {
-        await rootPath
+        public Task Run() => rootPath
             .GetConfigurations()
             .ToSections(rootPath.MovePathTo("src"))
             .WriteDocument(rootPath.MovePathTo("dist"), "output.pdf");
+
+        public Task Watch() => rootPath
+            .MovePathTo("src")
+            .WatchPath(this.Run);
+
+        // TODO creates a new space with conf file and sample init files
+        public Task New() => Task.CompletedTask;
     }
 
-    public async Task StartWatching() => await rootPath.MovePathTo("src").WatchPath(this.Run);
-}
-
-public static class LiteDocImpl
-{
-    public static LiteDoc ToLiteDoc(this string rootPath) => new LiteDoc(rootPath);
+    public static Base ToLiteDoc(this string rootPath) => new Base(rootPath);
 }

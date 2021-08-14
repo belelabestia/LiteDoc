@@ -21,6 +21,7 @@ public static class Watcher
                 .StartWatching();
         }
     }
+
     public static Task WatchPath(this string srcPath, Func<Task> handler) => Resources.Get<IWatcher>()!.WatchPath(srcPath, handler);
 
     private static FileSystemWatcher GetFileSystemWatcher(this string srcPath, Func<Task> handler)
@@ -44,6 +45,7 @@ public static class Watcher
         watcher.IncludeSubdirectories = true;
         return watcher;
     }
+
     private static Task StartWatching(this FileSystemWatcher watcher)
     {
         watcher.EnableRaisingEvents = true;
