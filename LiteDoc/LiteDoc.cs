@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 public class LiteDoc
@@ -7,7 +8,7 @@ public class LiteDoc
     private IDocumentService documentService;
     private IFileSystemService fileSystemService;
     private IWatcher watcher;
-    private LiteDocArgs args;
+    private IPath path;
 
     public LiteDoc(
         IConfigurationService configurationService,
@@ -15,7 +16,7 @@ public class LiteDoc
         IDocumentService documentService,
         IFileSystemService fileSystemService,
         IWatcher watcher,
-        LiteDocArgs args
+        IPath path
     )
     {
         this.configurationService = configurationService;
@@ -23,26 +24,24 @@ public class LiteDoc
         this.documentService = documentService;
         this.fileSystemService = fileSystemService;
         this.watcher = watcher;
-        this.args = args;
+        this.path = path;
     }
 
     public async Task Run()
     {
-        var configurations = await this.configurationService.GetConfigurations(args.Path);
-        var sections = await this.sectionService.ToSections(configurations, this.fileSystemService.MovePathTo(args.Path, "src"));
-        await this.documentService.WriteDocument(sections, this.fileSystemService.MovePathTo(args.Path, "dist"), "output.pdf");
+        var configurations = await this.configurationService.GetConfigurations(path.WorkspacePath);
+        var sections = await this.sectionService.ToSections(configurations, this.fileSystemService.MovePathTo(path.WorkspacePath, "src"));
+        await this.documentService.WriteDocument(sections, this.fileSystemService.MovePathTo(path.WorkspacePath, "dist"), "output.pdf");
     }
 
     public void Watch()
     {
-        var srcPath = this.fileSystemService.MovePathTo(this.args.Path, "src");
+        var srcPath = this.fileSystemService.MovePathTo(this.path.WorkspacePath, "src");
         this.watcher.WatchPath(srcPath, this.Run);
     }
 
-    public Task New(string rootPath)
+    public Task New()
     {
         return Task.CompletedTask;
     }
 }
-
-public record LiteDocArgs(string Command, string Path);

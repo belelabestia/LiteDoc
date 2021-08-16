@@ -1,11 +1,19 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-var liteDoc = Host
+using var host = Host
     .CreateDefaultBuilder()
+    .ConfigureLogging(logging => logging.AddSimpleConsole(options => options.SingleLine = true))
+    .UseConsoleLifetime()
     .ConfigureServices(services =>
     {
-        services.AddSingleton<LiteDocArgs>(new LiteDocArgs(args[0], args[1]));
+        services.Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true);
+        services.AddHostedService<LiteDocService>();
+
+        var typedArgs = new LiteDocArgs(args[0], args[1]);
+        services.AddSingleton<ICommand>(typedArgs);
+        services.AddSingleton<IPath>(typedArgs);
         services.AddTransient<LiteDoc>();
         services.AddTransient<IJsonService, JsonService>();
         services.AddTransient<IConfigurationService, ConfigurationService>();
@@ -14,8 +22,6 @@ var liteDoc = Host
         services.AddTransient<IFileSystemService, FileSystemService>();
         services.AddTransient<IWatcher, Watcher>();
     })
-    .Build()
-    .Services
-    .GetService<LiteDoc>();
+    .Build();
 
-liteDoc!.Watch();
+await host.RunAsync();
