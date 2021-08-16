@@ -5,20 +5,19 @@ using System.Threading.Tasks;
 
 public interface IWatcher
 {
-    Task WatchPath(string srcPath, Func<string, Task> handler);
+    void WatchPath(string srcPath, Func<Task> handler);
 }
 
 public class Watcher : IWatcher
 {
-    public Task WatchPath(string srcPath, Func<string, Task> handler)
+    public void WatchPath(string srcPath, Func<Task> handler)
     {
         Console.WriteLine($"Started watching on path {srcPath}");
-
         var watcher = this.GetFileSystemWatcher(srcPath, handler);
-        return this.StartWatching(watcher);
+        this.StartWatching(watcher);
     }
 
-    private FileSystemWatcher GetFileSystemWatcher(string srcPath, Func<string, Task> handler)
+    private FileSystemWatcher GetFileSystemWatcher(string srcPath, Func<Task> handler)
     {
         var watcher = new FileSystemWatcher(srcPath);
 
@@ -30,7 +29,7 @@ public class Watcher : IWatcher
             Console.WriteLine("Starting pipeline");
 
             await this.WaitFileFree(e.FullPath);
-            await handler(srcPath);
+            await handler();
 
             Console.WriteLine("Pipeline succeded.");
             inUse = false;
@@ -40,10 +39,15 @@ public class Watcher : IWatcher
         return watcher;
     }
 
-    private Task StartWatching(FileSystemWatcher watcher)
+    private void StartWatching(FileSystemWatcher watcher)
     {
         watcher.EnableRaisingEvents = true;
-        return Task.Delay(Timeout.Infinite);
+
+        var shutdown = false;
+        Console.CancelKeyPress += (sender, e) => shutdown = true;
+        while (!shutdown) { }
+
+        Console.WriteLine("LiteDoc out! See you next time :)");
     }
 
     private Task WaitFileFree(string path) => Task.Run(() =>
