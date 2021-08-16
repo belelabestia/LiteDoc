@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 
 public interface IWatcher
 {
@@ -9,9 +10,12 @@ public interface IWatcher
 
 public class Watcher : IWatcher
 {
+    private IHostApplicationLifetime lifetime;
+
+    public Watcher(IHostApplicationLifetime lifetime) => this.lifetime = lifetime;
+
     public void WatchPath(string srcPath, Func<Task> handler)
     {
-        Console.WriteLine($"Started watching on path {srcPath}");
         var watcher = this.GetFileSystemWatcher(srcPath, handler);
         this.StartWatching(watcher);
     }
@@ -25,12 +29,10 @@ public class Watcher : IWatcher
         {
             if (inUse) return;
             inUse = true;
-            Console.WriteLine("Starting pipeline");
 
             await this.WaitFileFree(e.FullPath);
             await handler();
 
-            Console.WriteLine("Pipeline succeded.");
             inUse = false;
         };
 
@@ -38,16 +40,7 @@ public class Watcher : IWatcher
         return watcher;
     }
 
-    private void StartWatching(FileSystemWatcher watcher)
-    {
-        watcher.EnableRaisingEvents = true;
-
-        var shutdown = false;
-        Console.CancelKeyPress += (sender, e) => shutdown = true;
-        while (!shutdown) { }
-
-        Console.WriteLine("LiteDoc out! See you next time :)");
-    }
+    private void StartWatching(FileSystemWatcher watcher) => watcher.EnableRaisingEvents = true;
 
     private Task WaitFileFree(string path) => Task.Run(() =>
     {

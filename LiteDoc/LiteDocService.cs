@@ -1,56 +1,73 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 public class LiteDocService : IHostedService
 {
     private LiteDoc liteDoc;
-    private ICommand command;
-    private ILogger logger;
     private IHostApplicationLifetime lifetime;
+    private LiteDocArgs args;
 
     public LiteDocService(
         LiteDoc liteDoc,
-        ICommand command,
-        ILogger<LiteDocService> logger,
-        IHostApplicationLifetime lifetime
+        IHostApplicationLifetime lifetime,
+        LiteDocArgs args
     )
     {
         this.liteDoc = liteDoc;
-        this.command = command;
-        this.logger = logger;
         this.lifetime = lifetime;
+        this.args = args;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        switch (this.command.Command)
+        switch (this.args.Command)
         {
             case "run":
-                this.logger.LogInformation("Running LiteDoc once...");
                 await this.liteDoc.Run();
                 this.lifetime.StopApplication();
                 return;
             case "watch":
-                this.logger.LogInformation("LiteDoc watching...");
                 this.liteDoc.Watch();
                 return;
             case "new":
-                this.logger.LogInformation("Creating new LiteDoc workspace...");
                 await this.liteDoc.New();
                 this.lifetime.StopApplication();
                 return;
             default:
-                this.logger.LogInformation("Invalid command; usage: litedoc [run | watch | new] <workspace-path>");
-                this.lifetime.StopApplication();
-                return;
+                throw new Exception("Invalid command; usage: litedoc [run | watch | new] <workspace-path>");
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("LiteDoc: done.");
         return Task.CompletedTask;
     }
+}
+
+public static class LiteDocExtensions
+{
+    public static IHostBuilder UseLiteDoc(this IHostBuilder builder, string[] args) => builder
+        .UseConsoleLifetime()
+        .ConfigureServices(services =>
+        {
+            services.AddHostedService<LiteDocService>();
+
+            var typedArgs = new LiteDocArgs(args[0], args[1]);
+            services.AddSingleton<LiteDocArgs>(typedArgs);
+            services.AddTransient<LiteDoc>();
+            services.AddTransient<IJsonService, JsonService>();
+            services.AddTransient<IConfigurationService, ConfigurationService>();
+            services.AddTransient<ISectionService, SectionService>();
+            services.AddTransient<IDocumentService, DocumentService>();
+            services.AddTransient<IFileSystemService, FileSystemService>();
+            services.AddTransient<IWatcher, Watcher>();
+        });
+
+    public static Task RunLiteDoc(this string[] args) => Host
+        .CreateDefaultBuilder()
+        .UseLiteDoc(args)
+        .RunConsoleAsync();
 }
