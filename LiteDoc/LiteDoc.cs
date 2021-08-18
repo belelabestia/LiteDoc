@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 public class LiteDoc
@@ -39,18 +40,23 @@ public class LiteDoc
         this.watcher.WatchPath(srcPath, this.Run);
     }
 
-    public Task New() => this.fileSystemService.CreateWorkspace(this.args.Path, new[]
+    public Task New() => this.fileSystemService.CreateWorkspace(this.args.Path, BaseWorkspace.Files);
+}
+
+public static class BaseWorkspace
+{
+    public static IEnumerable<FileDescription> Files => new[]
     {
         new FileDescription("first-page.html", "<h1>LiteDoc is awesome!</h1>"),
-        new FileDescription("section-1.md", this.section1),
-        new FileDescription("section-2.md", this.section2),
-    });
+        new FileDescription("section-1.md", section1),
+        new FileDescription("section-2.md", section2),
+    };
 
-    private string section1 =>
+    private static string section1 =>
 @"# Welcome to LiteDoc
 
 This is your first _template_. You can use `html` or `markdown`.";
-    private string section2 => 
+    private static string section2 =>
 @"<style>
     @page {
         @top-center {
