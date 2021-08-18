@@ -2,12 +2,16 @@ using System.Text.Json;
 
 public interface IJsonService
 {
-    T Deserialize<T>(string json, JsonSerializerOptions options);
+    string Serialize(object obj);
+    T Deserialize<T>(string json);
 }
 
 public class JsonService : IJsonService
 {
-    public T Deserialize<T>(string json, JsonSerializerOptions options) => JsonSerializer.Deserialize<T>(json, options)!;
+    private JsonSerializerOptions options;
+    public JsonService(JsonSerializerOptions options) => this.options = options;
+    public string Serialize(object obj) => JsonSerializer.Serialize(obj, this.options);
+    public T Deserialize<T>(string json) => JsonSerializer.Deserialize<T>(json, this.options)!;
 }
 
 public static class Json

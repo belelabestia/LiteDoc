@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,6 +59,7 @@ public static class LiteDocExtensions
 
             var typedArgs = new LiteDocArgs(args[0], args[1]);
             services.AddSingleton<LiteDocArgs>(typedArgs);
+            services.AddSingleton<JsonSerializerOptions>(Json.DefaultOptions);
             services.AddTransient<LiteDoc>();
             services.AddTransient<IJsonService, JsonService>();
             services.AddTransient<IConfigurationService, ConfigurationService>();

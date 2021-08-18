@@ -21,7 +21,7 @@ public class ConfigurationService : IConfigurationService
     {
         var filePath = this.fileSystem.MovePathTo(rootPath, Configuration.DefaultFileName);
         var text = await this.fileSystem.GetText(filePath);
-        var configurations = this.json.Deserialize<IEnumerable<Configuration>>(text, Json.DefaultOptions);
+        var configurations = this.json.Deserialize<IEnumerable<Configuration>>(text);
         return configurations;
     }
 }

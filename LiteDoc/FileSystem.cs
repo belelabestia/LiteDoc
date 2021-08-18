@@ -15,6 +15,8 @@ public interface IFileSystemService
 
 public class FileSystemService : IFileSystemService
 {
+    private IJsonService json;
+    public FileSystemService(IJsonService json) => this.json = json;
     public Task<string> GetText(string path) => File.ReadAllTextAsync(path);
     public string MovePathTo(string path, string to) => $"{path}/{to}".Replace('/', Path.DirectorySeparatorChar);
     public Stream ToMemoryStream(byte[] pdf) => new MemoryStream(pdf);
@@ -44,8 +46,8 @@ public class FileSystemService : IFileSystemService
             })
             .ToList();
 
-        var json = JsonSerializer.Serialize(configurations, Json.DefaultOptions);
-        var confFileName = this.MovePathTo(rootPath, "litedoc.conf.json");
+        var json = this.json.Serialize(configurations);
+        var confFileName = this.MovePathTo(rootPath, Configuration.DefaultFileName);
         await File.WriteAllTextAsync(confFileName, json);
         var srcPath = this.MovePathTo(rootPath, "src");
         Directory.CreateDirectory(srcPath);
