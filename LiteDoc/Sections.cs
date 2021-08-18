@@ -39,6 +39,7 @@ public class SectionService : ISectionService
     public async Task<PdfDocument[]> ToSections(IEnumerable<Configuration> configurations, string srcPath)
     {
         var tasks = configurations
+            .AsParallel()
             .Select(async configuration =>
             {
                 var path = this.fileSystemService.MovePathTo(srcPath, configuration.Path);

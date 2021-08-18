@@ -12,5 +12,9 @@ public class JsonService : IJsonService
 
 public static class Json
 {
-    public static JsonSerializerOptions DefaultOptions => new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    public static JsonSerializerOptions DefaultOptions => new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true
+    };
 }

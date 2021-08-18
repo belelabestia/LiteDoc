@@ -54,6 +54,7 @@ public static class LiteDocExtensions
         .ConfigureServices(services =>
         {
             services.AddHostedService<LiteDocService>();
+            services.Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true);
 
             var typedArgs = new LiteDocArgs(args[0], args[1]);
             services.AddSingleton<LiteDocArgs>(typedArgs);
