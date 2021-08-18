@@ -1,46 +1,61 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 
 public interface IWatcher
 {
-    void WatchPath(string srcPath, Func<Task> handler);
+    void WatchPath(string rootPath, Func<Task> handler);
 }
 
 public class Watcher : IWatcher
 {
-    private IHostApplicationLifetime lifetime;
+    private IFileSystemService fileSystemService;
+    public Watcher(IFileSystemService fileSystemService) => this.fileSystemService = fileSystemService;
 
-    public Watcher(IHostApplicationLifetime lifetime) => this.lifetime = lifetime;
-
-    public void WatchPath(string srcPath, Func<Task> handler)
+    public void WatchPath(string rootPath, Func<Task> handler)
     {
-        var watcher = this.GetFileSystemWatcher(srcPath, handler);
-        this.StartWatching(watcher);
-    }
-
-    private FileSystemWatcher GetFileSystemWatcher(string srcPath, Func<Task> handler)
-    {
-        var watcher = new FileSystemWatcher(srcPath);
-
-        bool inUse = false;
-        watcher.Changed += async (object sender, FileSystemEventArgs e) =>
+        var confWatcher = new FileSystemWatcher
         {
-            if (inUse) return;
-            inUse = true;
-
-            await this.WaitFileFree(e.FullPath);
-            await handler();
-
-            inUse = false;
+            Path = rootPath,
+            Filter = "litedoc.conf.json"
         };
 
-        watcher.IncludeSubdirectories = true;
-        return watcher;
+        var srcPath = this.fileSystemService.MovePathTo(rootPath, "src");
+
+        var srcWatcher = new FileSystemWatcher
+        {
+            Path = srcPath,
+            IncludeSubdirectories = true
+        };
+
+        this.StartWatching(new[] { confWatcher, srcWatcher }, handler);
     }
 
-    private void StartWatching(FileSystemWatcher watcher) => watcher.EnableRaisingEvents = true;
+    private void StartWatching(IEnumerable<FileSystemWatcher> watchers, Func<Task> handler)
+    {
+        bool inUse = false;
+        foreach (var watcher in watchers)
+        {
+            watcher.Changed += async (object sender, FileSystemEventArgs e) =>
+            {
+                if (inUse) return;
+                inUse = true;
+
+                await this.WaitFileFree(e.FullPath);
+
+                try
+                {
+                    await handler();
+                }
+                catch { }
+
+                inUse = false;
+            };
+
+            watcher.EnableRaisingEvents = true;
+        }
+    }
 
     private Task WaitFileFree(string path) => Task.Run(() =>
     {

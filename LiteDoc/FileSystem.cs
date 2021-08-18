@@ -39,6 +39,7 @@ public class FileSystemService : IFileSystemService
 
         var configurations = files
             .AsParallel()
+            .AsOrdered()
             .Select(file =>
             {
                 var format = file.Path.Split('.').Last();
@@ -54,6 +55,7 @@ public class FileSystemService : IFileSystemService
 
         var tasks = files
             .AsParallel()
+            .AsOrdered()
             .Select(file =>
             {
                 var filePath = this.MovePathTo(srcPath, file.Path);

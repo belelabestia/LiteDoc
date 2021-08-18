@@ -34,12 +34,7 @@ public class LiteDoc
         await this.documentService.WriteDocument(sections, this.fileSystemService.MovePathTo(args.Path, "dist"), "output.pdf");
     }
 
-    public void Watch()
-    {
-        var srcPath = this.fileSystemService.MovePathTo(this.args.Path, "src");
-        this.watcher.WatchPath(srcPath, this.Run);
-    }
-
+    public void Watch() => this.watcher.WatchPath(this.args.Path, this.Run);
     public Task New() => this.fileSystemService.CreateWorkspace(this.args.Path, BaseWorkspace.Files);
 }
 

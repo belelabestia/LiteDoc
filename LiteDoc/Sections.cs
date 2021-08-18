@@ -40,6 +40,7 @@ public class SectionService : ISectionService
     {
         var tasks = configurations
             .AsParallel()
+            .AsOrdered()
             .Select(async configuration =>
             {
                 var path = this.fileSystemService.MovePathTo(srcPath, configuration.Path);
