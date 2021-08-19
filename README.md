@@ -8,7 +8,7 @@ LiteDoc trasforma la tua documentazione HTML e Markdown in un unico PDF pronto p
 - LiteDoc supporta la creazione di più sezioni di diversi formati e supporta nativamente le regole CSS dedicate alla stampa, grazie a Weasyprint.
 - LiteDoc può rimanere in ascolto su una cartella e aggiornare automaticamente il risultato definitivo dei tuoi documenti.
 
-## Use
+## Uso
 
 > Per compilare e installare LiteDoc è necessario `.NET SDK 5.0`.  
 > Per installarlo, andare [qui](https://dotnet.microsoft.com/download/visual-studio-sdks) e scaricare la versione 5 per la propria piattaforma.
