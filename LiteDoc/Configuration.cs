@@ -8,6 +8,10 @@ public interface IConfigurationService
 
 public class ConfigurationService : IConfigurationService
 {
+    // conf.create
+    // conf.update
+    // conf.addSection
+    // conf.removeSection
     private IFileSystemService fileSystem;
     private IJsonService json;
 

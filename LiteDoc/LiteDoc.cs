@@ -9,6 +9,7 @@ public class LiteDoc
     private IFileSystemService fileSystemService;
     private IWatcher watcher;
     private LiteDocArgs args;
+    private IWorkspaceService workspaceService;
 
     public LiteDoc(
         IConfigurationService configurationService,
@@ -16,7 +17,8 @@ public class LiteDoc
         IDocumentService documentService,
         IFileSystemService fileSystemService,
         IWatcher watcher,
-        LiteDocArgs args
+        LiteDocArgs args,
+        IWorkspaceService workspaceService
     )
     {
         this.configurationService = configurationService;
@@ -25,6 +27,7 @@ public class LiteDoc
         this.fileSystemService = fileSystemService;
         this.watcher = watcher;
         this.args = args;
+        this.workspaceService = workspaceService;
     }
 
     public async Task Run()
@@ -35,36 +38,7 @@ public class LiteDoc
     }
 
     public void Watch() => this.watcher.WatchPath(this.args.Path, this.Run);
-    public Task New() => this.fileSystemService.CreateWorkspace(this.args.Path, BaseWorkspace.Files);
-}
-
-public static class BaseWorkspace
-{
-    public static IEnumerable<FileDescription> Files => new[]
-    {
-        new FileDescription("first-page.html", "<h1>LiteDoc is awesome!</h1>"),
-        new FileDescription("section-1.md", section1),
-        new FileDescription("section-2.md", section2),
-    };
-
-    private static string section1 =>
-@"# Welcome to LiteDoc
-
-This is your first _template_. You can use `html` or `markdown`.";
-    private static string section2 =>
-@"<style>
-    @page {
-        @top-center {
-            content: ""you can add print-specific css rules, like this"";
-        }
-    }
-</style>
-
-## Add new sections
-
-You can add **all** the sections you want.
-
-Just remember to add them in `litedoc.conf.json`!";
+    public Task New() => this.fileSystemService.CreateWorkspace(this.args.Path, Workspace.DefaultFiles);
 }
 
 public record LiteDocArgs(string Command, string Path);

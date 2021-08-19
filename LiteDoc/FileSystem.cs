@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 public interface IFileSystemService
 {
     Task<string> GetText(string path);
+    Task WriteText(string path, string text);
     string MovePathTo(string path, string to);
     Task Save(byte[] bytes, string outputPath, string fileName);
     Stream ToMemoryStream(byte[] pdf);
-    Task CreateWorkspace(string rootPath, IEnumerable<FileDescription> files);
+    void CreateDirectory(string path);
 }
 
 public class FileSystemService : IFileSystemService
@@ -18,8 +18,10 @@ public class FileSystemService : IFileSystemService
     private IJsonService json;
     public FileSystemService(IJsonService json) => this.json = json;
     public Task<string> GetText(string path) => File.ReadAllTextAsync(path);
+    public Task WriteText(string path, string text) => File.WriteAllTextAsync(path, text);
     public string MovePathTo(string path, string to) => $"{path}/{to}".Replace('/', Path.DirectorySeparatorChar);
     public Stream ToMemoryStream(byte[] pdf) => new MemoryStream(pdf);
+    public void CreateDirectory(string path) => Directory.CreateDirectory(path);
 
     public Task Save(byte[] bytes, string outputPath, string fileName)
     {
@@ -32,41 +34,4 @@ public class FileSystemService : IFileSystemService
         if (Directory.Exists(path)) Directory.Delete(path, true);
         Directory.CreateDirectory(path);
     }
-
-    public async Task CreateWorkspace(string rootPath, IEnumerable<FileDescription> files)
-    {
-        Directory.CreateDirectory(rootPath);
-
-        var configurations = files
-            .AsParallel()
-            .AsOrdered()
-            .Select(file =>
-            {
-                var format = file.Path.Split('.').Last();
-                return new Configuration(file.Path, format);
-            })
-            .ToList();
-
-        var json = this.json.Serialize(configurations);
-        var confFileName = this.MovePathTo(rootPath, Configuration.DefaultFileName);
-        await File.WriteAllTextAsync(confFileName, json);
-        var srcPath = this.MovePathTo(rootPath, "src");
-        Directory.CreateDirectory(srcPath);
-
-        var tasks = files
-            .AsParallel()
-            .AsOrdered()
-            .Select(file =>
-            {
-                var filePath = this.MovePathTo(srcPath, file.Path);
-                var dir = this.MovePathTo(filePath, "..");
-                Directory.CreateDirectory(dir);
-
-                return File.WriteAllTextAsync(filePath, file.Content);
-            });
-
-        await Task.WhenAll(tasks);
-    }
 }
-
-public record FileDescription(string Path, string Content);
