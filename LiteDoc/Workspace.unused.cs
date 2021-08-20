@@ -2,6 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+/**************************************
+****** THIS MODULE IS NOT IN USE ******
+****** IT'S JUST HERE FOR FUTURE ******
+******      IMPLEMENTATIONS      ******
+**************************************/
+
 public interface IWorkspace
 {
     Task Create(string rootPath, IEnumerable<Workspace.File> files);
