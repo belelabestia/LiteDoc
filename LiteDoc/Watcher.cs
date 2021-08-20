@@ -5,74 +5,78 @@ using System.Threading.Tasks;
 
 public interface IWatcher
 {
-    void WatchPath(string rootPath, Func<Task> handler);
+    void Start(string rootPath, Func<Task> handler);
 }
 
-public class Watcher : IWatcher
+public static class Watcher
 {
-    private IFileSystemService fileSystemService;
-    public Watcher(IFileSystemService fileSystemService) => this.fileSystemService = fileSystemService;
-
-    public void WatchPath(string rootPath, Func<Task> handler)
+    public class Service : IWatcher
     {
-        var confWatcher = new FileSystemWatcher
+        private IFileSystem fileSystem;
+        public Service(IFileSystem fileSystem) => this.fileSystem = fileSystem;
+
+        public void Start(string rootPath, Func<Task> handler)
         {
-            Path = rootPath,
-            Filter = "litedoc.conf.json"
-        };
-
-        var srcPath = this.fileSystemService.MovePathTo(rootPath, "src");
-
-        var srcWatcher = new FileSystemWatcher
-        {
-            Path = srcPath,
-            IncludeSubdirectories = true
-        };
-
-        this.StartWatching(new[] { confWatcher, srcWatcher }, handler);
-    }
-
-    private void StartWatching(IEnumerable<FileSystemWatcher> watchers, Func<Task> handler)
-    {
-        bool inUse = false;
-        foreach (var watcher in watchers)
-        {
-            watcher.Changed += async (object sender, FileSystemEventArgs e) =>
+            var confWatcher = new FileSystemWatcher
             {
-                if (inUse) return;
-                inUse = true;
-
-                await this.WaitFileFree(e.FullPath);
-
-                try
-                {
-                    await handler();
-                }
-                catch { }
-
-                inUse = false;
+                Path = rootPath,
+                Filter = "litedoc.conf.json"
             };
 
-            watcher.EnableRaisingEvents = true;
-        }
-    }
+            var srcWatcher = new FileSystemWatcher
+            {
+                Path = rootPath.Pipe(this.MovePathTo("src")),
+                IncludeSubdirectories = true
+            };
 
-    private Task WaitFileFree(string path) => Task.Run(() =>
-    {
-        while (!this.IsFileFree(path)) { }
-        return;
-    });
+            this.Activate(new[] { confWatcher, srcWatcher }, handler);
+        }
 
-    private bool IsFileFree(string path)
-    {
-        try
+        private void Activate(IEnumerable<FileSystemWatcher> watchers, Func<Task> handler)
         {
-            using var inputStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
-            return inputStream.Length > 0;
+            bool inUse = false;
+            foreach (var watcher in watchers)
+            {
+                watcher.Changed += async (object sender, FileSystemEventArgs e) =>
+                {
+                    if (inUse) return;
+                    inUse = true;
+
+                    await this.WaitFileFree(e.FullPath);
+
+                    try
+                    {
+                        await handler();
+                    }
+                    catch { }
+
+                    inUse = false;
+                };
+
+                watcher.EnableRaisingEvents = true;
+            }
         }
-        catch
+
+        private Task WaitFileFree(string path) => Task.Run(() =>
         {
-            return false;
+            while (!this.IsFileFree(path)) { }
+            return;
+        });
+
+        private bool IsFileFree(string path)
+        {
+            try
+            {
+                using var inputStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                return inputStream.Length > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
+
+        private Func<string, string> MovePathTo(string to) =>
+            path => this.fileSystem.MovePathTo(path, to);
     }
 }

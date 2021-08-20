@@ -4,25 +4,25 @@ using System.Threading.Tasks;
 
 public interface IWorkspaceService
 {
-    void Create(/*workspace*/);
-    void Apply(/*configuration*/);
+    Task Create(string rootPath, IEnumerable<FileDescription> files);
+    // void Apply(/*configuration*/);
 }
 
-public class WorkserService
+public class WorkserService : IWorkspaceService
 {
-    private IFileSystemService fileSystemService;
-    private IJsonService jsonService;
+    private IFileSystem fileSystemService;
+    private IJson jsonService;
 
     public WorkserService(
-        IFileSystemService fileSystemService,
-        IJsonService jsonService
+        IFileSystem fileSystemService,
+        IJson jsonService
     )
     {
         this.fileSystemService = fileSystemService;
         this.jsonService = jsonService;
     }
 
-    public async Task CreateWorkspace(string rootPath, IEnumerable<FileDescription> files)
+    public async Task Create(string rootPath, IEnumerable<FileDescription> files)
     {
         this.fileSystemService.CreateDirectory(rootPath);
 
@@ -32,7 +32,7 @@ public class WorkserService
             .Select(file =>
             {
                 var format = file.Path.Split('.').Last();
-                return new Configuration(file.Path, format);
+                return new Configuration.Model(file.Path, format);
             })
             .ToList();
 

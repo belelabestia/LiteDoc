@@ -1,44 +1,128 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
-public class LiteDoc
+using System;
+using System.Text.Json;
+using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Collections.Generic;
+using PdfSharp.Pdf;
+
+public static class LiteDoc
 {
-    private IConfigurationService configurationService;
-    private ISectionService sectionService;
-    private IDocumentService documentService;
-    private IFileSystemService fileSystemService;
-    private IWatcher watcher;
-    private LiteDocArgs args;
-    private IWorkspaceService workspaceService;
+    public static Action<IServiceCollection> LiteDocServices(Args args) => services =>
+        services
+            .AddHostedService<Service>()
+            .Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true)
+            .AddSingleton<Args>(args)
+            .AddSingleton<JsonSerializerOptions>(Json.DefaultOptions)
+            .AddTransient<Default>()
+            .AddTransient<IJson, Json.Service>()
+            .AddTransient<IConfiguration, Configuration.Service>()
+            .AddTransient<ISection, Section.Service>()
+            .AddTransient<IDocument, Document.Service>()
+            .AddTransient<IFileSystem, FileSystem.Service>()
+            .AddTransient<IWatcher, Watcher.Service>();
 
-    public LiteDoc(
-        IConfigurationService configurationService,
-        ISectionService sectionService,
-        IDocumentService documentService,
-        IFileSystemService fileSystemService,
-        IWatcher watcher,
-        LiteDocArgs args,
-        IWorkspaceService workspaceService
-    )
+    public static IHostBuilder UseLiteDoc(this IHostBuilder builder, string[] args) =>
+        builder
+            .UseConsoleLifetime()
+            .ConfigureServices(LiteDocServices(new Args(args[0], args[1])));
+
+    public static Task RunLiteDoc(this string[] args) =>
+        Host
+            .CreateDefaultBuilder()
+            .UseLiteDoc(args)
+            .RunConsoleAsync();
+
+    public class Default
     {
-        this.configurationService = configurationService;
-        this.sectionService = sectionService;
-        this.documentService = documentService;
-        this.fileSystemService = fileSystemService;
-        this.watcher = watcher;
-        this.args = args;
-        this.workspaceService = workspaceService;
+        private IConfiguration configuration;
+        private ISection section;
+        private IDocument document;
+        private IFileSystem fileSystem;
+        private IWatcher watcher;
+        private Args args;
+        private IWorkspaceService workspace;
+
+        public Default(
+            IConfiguration configuration,
+            ISection section,
+            IDocument document,
+            IFileSystem fileSystem,
+            IWatcher watcher,
+            Args args,
+            IWorkspaceService workspace
+        )
+        {
+            this.configuration = configuration;
+            this.section = section;
+            this.document = document;
+            this.fileSystem = fileSystem;
+            this.watcher = watcher;
+            this.args = args;
+            this.workspace = workspace;
+        }
+
+        public Task Run() =>
+            args.Path
+                .Pipe(this.configuration.GetConfiguration)
+                .Pipe(this.ToSections(this.fileSystem.MovePathTo(args.Path, "src")))
+                .Pipe(this.WriteDocument(this.fileSystem.MovePathTo(args.Path, "dist"), "output.pdf"));
+
+        public void Watch() => this.watcher.Start(this.args.Path, this.Run);
+        public Task New() => this.workspace.Create(this.args.Path, Workspace.DefaultFiles);
+
+        private Func<IEnumerable<Configuration.Model>, Task<PdfDocument[]>> ToSections(string srcPath) =>
+            configurations => this.section.ToSections(configurations, srcPath);
+
+        private Func<PdfDocument[], Task> WriteDocument(string outputPath, string fileName) =>
+            sections => this.document.WriteDocument(sections, outputPath, fileName);
     }
 
-    public async Task Run()
+    public class Service : IHostedService
     {
-        var configurations = await this.configurationService.GetConfigurations(args.Path);
-        var sections = await this.sectionService.ToSections(configurations, this.fileSystemService.MovePathTo(args.Path, "src"));
-        await this.documentService.WriteDocument(sections, this.fileSystemService.MovePathTo(args.Path, "dist"), "output.pdf");
+        private Default liteDoc;
+        private IHostApplicationLifetime lifetime;
+        private Args args;
+
+        public Service(
+            Default liteDoc,
+            IHostApplicationLifetime lifetime,
+            Args args
+        )
+        {
+            this.liteDoc = liteDoc;
+            this.lifetime = lifetime;
+            this.args = args;
+        }
+
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            switch (this.args.Command)
+            {
+                case "run":
+                    await this.liteDoc.Run();
+                    this.lifetime.StopApplication();
+                    return;
+                case "watch":
+                    this.liteDoc.Watch();
+                    return;
+                case "new":
+                    await this.liteDoc.New();
+                    this.lifetime.StopApplication();
+                    return;
+                default:
+                    throw new Exception("Invalid command; usage: litedoc [run | watch | new] <workspace-path>");
+            }
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    public void Watch() => this.watcher.WatchPath(this.args.Path, this.Run);
-    public Task New() => this.fileSystemService.CreateWorkspace(this.args.Path, Workspace.DefaultFiles);
+    public record Args(string Command, string Path);
 }
 
-public record LiteDocArgs(string Command, string Path);
+
+
+
