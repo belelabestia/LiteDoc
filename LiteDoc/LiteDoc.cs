@@ -1,8 +1,7 @@
-using System.Threading.Tasks;
-
 using System;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
@@ -12,7 +11,7 @@ public static class LiteDoc
 {
     public static Action<IServiceCollection> LiteDocServices(Args args) => services =>
         services
-            .AddHostedService<Service>()
+            .AddHostedService<Console>()
             .Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true)
             .AddSingleton<Args>(args)
             .AddSingleton<JsonSerializerOptions>(Json.DefaultOptions)
@@ -24,16 +23,18 @@ public static class LiteDoc
             .AddTransient<IFileSystem, FileSystem.Service>()
             .AddTransient<IWatcher, Watcher.Service>();
 
-    public static IHostBuilder UseLiteDoc(this IHostBuilder builder, string[] args) =>
+    public static IHostBuilder UseLiteDocConsole(this IHostBuilder builder, string[] args) =>
         builder
             .UseConsoleLifetime()
             .ConfigureServices(LiteDocServices(new Args(args[0], args[1])));
 
-    public static Task RunLiteDoc(this string[] args) =>
+    public static Task RunLiteDocConsole(this string[] args) =>
         Host
             .CreateDefaultBuilder()
-            .UseLiteDoc(args)
+            .UseLiteDocConsole(args)
             .RunConsoleAsync();
+
+    public record Args(string Command, string Path);
 
     public class Default
     {
@@ -43,7 +44,7 @@ public static class LiteDoc
         private IFileSystem fileSystem;
         private IWatcher watcher;
         private Args args;
-        private IWorkspaceService workspace;
+        private IWorkspace workspace;
 
         public Default(
             IConfiguration configuration,
@@ -52,7 +53,7 @@ public static class LiteDoc
             IFileSystem fileSystem,
             IWatcher watcher,
             Args args,
-            IWorkspaceService workspace
+            IWorkspace workspace
         )
         {
             this.configuration = configuration;
@@ -80,13 +81,13 @@ public static class LiteDoc
             sections => this.document.WriteDocument(sections, outputPath, fileName);
     }
 
-    public class Service : IHostedService
+    public class Console : IHostedService
     {
         private Default liteDoc;
         private IHostApplicationLifetime lifetime;
         private Args args;
 
-        public Service(
+        public Console(
             Default liteDoc,
             IHostApplicationLifetime lifetime,
             Args args
@@ -119,8 +120,6 @@ public static class LiteDoc
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
-
-    public record Args(string Command, string Path);
 }
 
 

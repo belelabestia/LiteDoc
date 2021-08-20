@@ -1,2 +1,2 @@
 ﻿await args
-    .RunLiteDoc();
+    .RunLiteDocConsole();
