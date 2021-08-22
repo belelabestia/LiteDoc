@@ -15,20 +15,26 @@ public static class Configuration
     {
         private IFileSystem fileSystem;
         private IJson json;
+        private IConsole console;
 
-        public Service(IFileSystem fileSystem, IJson json)
+        public Service(
+            IFileSystem fileSystem,
+            IJson json,
+            IConsole console
+        )
         {
             this.fileSystem = fileSystem;
             this.json = json;
+            this.console = console;
         }
 
         public Task<IEnumerable<Model>> GetConfiguration(string rootPath) =>
             rootPath
-                .Pipe(this.MovePathTo(Configuration.DefaultFileName))
+                .Pipe(rootPath => this.fileSystem.MovePathTo(rootPath, Configuration.DefaultFileName))
+                .Effect(confFile => this.console.Print($"Fetching configuration from file {confFile}."))
                 .Pipe(this.fileSystem.GetText)
-                .Pipe(this.json.Deserialize<IEnumerable<Model>>);
-
-        private Func<string, string> MovePathTo(string fileName) =>
-            rootPath => this.fileSystem.MovePathTo(rootPath, fileName);
+                .Effect(() => this.console.Print("Deserializing configuration..."))
+                .Pipe(this.json.Deserialize<IEnumerable<Model>>)
+                .Effect(() => this.console.Print("Successfully deserialized configuration."));
     }
 }

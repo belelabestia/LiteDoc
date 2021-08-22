@@ -11,7 +11,7 @@ public static class LiteDoc
 {
     public static Action<IServiceCollection> LiteDocServices(Args args) => services =>
         services
-            .AddHostedService<Console>()
+            .AddHostedService<Service>()
             .Configure<ConsoleLifetimeOptions>(options => options.SuppressStatusMessages = true)
             .AddSingleton<Args>(args)
             .AddSingleton<JsonSerializerOptions>(Json.DefaultOptions)
@@ -21,7 +21,9 @@ public static class LiteDoc
             .AddTransient<ISection, Section.Service>()
             .AddTransient<IDocument, Document.Service>()
             .AddTransient<IFileSystem, FileSystem.Service>()
-            .AddTransient<IWatcher, Watcher.Service>();
+            .AddTransient<IWatcher, Watcher.Service>()
+            .AddTransient<IWorkspace, Workspace.Service>()
+            .AddTransient<IConsole, Console.Service>();
 
     public static IHostBuilder UseLiteDocConsole(this IHostBuilder builder, string[] args) =>
         builder
@@ -45,6 +47,7 @@ public static class LiteDoc
         private IWatcher watcher;
         private Args args;
         private IWorkspace workspace;
+        private IConsole console;
 
         public Default(
             IConfiguration configuration,
@@ -53,7 +56,8 @@ public static class LiteDoc
             IFileSystem fileSystem,
             IWatcher watcher,
             Args args,
-            IWorkspace workspace
+            IWorkspace workspace,
+            IConsole console
         )
         {
             this.configuration = configuration;
@@ -63,13 +67,16 @@ public static class LiteDoc
             this.watcher = watcher;
             this.args = args;
             this.workspace = workspace;
+            this.console = console;
         }
 
         public Task Run() =>
             args.Path
                 .Pipe(this.configuration.GetConfiguration)
-                .Pipe(this.ToSections(this.fileSystem.MovePathTo(args.Path, "src")))
-                .Pipe(this.WriteDocument(this.fileSystem.MovePathTo(args.Path, "dist"), "output.pdf"));
+                .With(this.fileSystem.MovePathTo(args.Path, "src"))
+                .Pipe(((IEnumerable<Configuration.Model> conf, string srcPath) _) => this.section.ToSections(_.conf, _.srcPath))
+                .With(this.fileSystem.MovePathTo(args.Path, "dist"))
+                .Pipe(((PdfDocument[] secs, string distPath) _) => this.document.WriteDocument(_.secs, _.distPath, "output.pdf"));
 
         public void Watch() => this.watcher.Start(this.args.Path, this.Run);
         public Task New() => this.workspace.Create(this.args.Path, Workspace.DefaultFiles);
@@ -81,13 +88,13 @@ public static class LiteDoc
             sections => this.document.WriteDocument(sections, outputPath, fileName);
     }
 
-    public class Console : IHostedService
+    public class Service : IHostedService
     {
         private Default liteDoc;
         private IHostApplicationLifetime lifetime;
         private Args args;
 
-        public Console(
+        public Service(
             Default liteDoc,
             IHostApplicationLifetime lifetime,
             Args args

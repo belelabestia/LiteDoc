@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using PdfSharp.Pdf;
@@ -23,21 +24,21 @@ public static class Document
                 .Pipe(this.AsByteArray)
                 .Pipe(this.Save(outputPath, fileName));
 
-        private PdfDocument AddSection(PdfDocument document, PdfDocument section)
-        {
-            foreach (var page in section.Pages) document.AddPage(page);
-            return document;
-        }
+        private PdfDocument AddSection(PdfDocument document, PdfDocument section) =>
+            section.Pages
+                .Pipe(pages => (IEnumerable<PdfPage>)pages)
+                .Aggregate(document, this.AddPage);
 
-        private byte[] AsByteArray(PdfDocument document)
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            var stream = new MemoryStream();
-            document.Save(stream, false);
-            return stream.ToArray();
-        }
+        private byte[] AsByteArray(PdfDocument document) =>
+            new MemoryStream()
+                .Effect(() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance))
+                .Effect(stream => document.Save(stream, false))
+                .ToArray();
 
         private Func<byte[], Task> Save(string outputPath, string fileName) =>
             bytes => this.fileSystem.Save(bytes, outputPath, fileName);
+
+        private PdfDocument AddPage(PdfDocument document, PdfPage page) =>
+            document.Effect(() => document.AddPage(page));
     }
 }
