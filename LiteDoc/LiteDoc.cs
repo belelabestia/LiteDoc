@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Collections.Generic;
 using PdfSharp.Pdf;
 
 public static class LiteDoc
@@ -72,20 +71,19 @@ public static class LiteDoc
 
         public Task Run() =>
             args.Path
+                .Effect(path => this.console.Print($"Starting LiteDoc pipeline in path: {path}"))
                 .Pipe(this.configuration.GetConfiguration)
+                .Effect(() => this.console.Print("Successfully fetched configuration."))
                 .With(this.fileSystem.MovePathTo(args.Path, "src"))
-                .Pipe(((IEnumerable<Configuration.Model> conf, string srcPath) _) => this.section.ToSections(_.conf, _.srcPath))
+                .Effect(() => this.console.Print("Parsing sections to PDF..."))
+                .Pipe(this.section.ToSections)
+                .Effect(() => this.console.Print("Successfully parsed sections."))
                 .With(this.fileSystem.MovePathTo(args.Path, "dist"))
-                .Pipe(((PdfDocument[] secs, string distPath) _) => this.document.WriteDocument(_.secs, _.distPath, "output.pdf"));
+                .Pipe((PdfDocument[] secs, string distPath) => this.document.WriteDocument(secs, distPath, "output.pdf"))
+                .Effect(() => this.console.Print("LiteDoc pipeline succeded."));
 
         public void Watch() => this.watcher.Start(this.args.Path, this.Run);
         public Task New() => this.workspace.Create(this.args.Path, Workspace.DefaultFiles);
-
-        private Func<IEnumerable<Configuration.Model>, Task<PdfDocument[]>> ToSections(string srcPath) =>
-            configurations => this.section.ToSections(configurations, srcPath);
-
-        private Func<PdfDocument[], Task> WriteDocument(string outputPath, string fileName) =>
-            sections => this.document.WriteDocument(sections, outputPath, fileName);
     }
 
     public class Service : IHostedService

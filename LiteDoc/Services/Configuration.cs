@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -15,26 +14,20 @@ public static class Configuration
     {
         private IFileSystem fileSystem;
         private IJson json;
-        private IConsole console;
 
         public Service(
             IFileSystem fileSystem,
-            IJson json,
-            IConsole console
+            IJson json
         )
         {
             this.fileSystem = fileSystem;
             this.json = json;
-            this.console = console;
         }
 
         public Task<IEnumerable<Model>> GetConfiguration(string rootPath) =>
             rootPath
                 .Pipe(rootPath => this.fileSystem.MovePathTo(rootPath, Configuration.DefaultFileName))
-                .Effect(confFile => this.console.Print($"Fetching configuration from file {confFile}."))
                 .Pipe(this.fileSystem.GetText)
-                .Effect(() => this.console.Print("Deserializing configuration..."))
-                .Pipe(this.json.Deserialize<IEnumerable<Model>>)
-                .Effect(() => this.console.Print("Successfully deserialized configuration."));
+                .Pipe(this.json.Deserialize<IEnumerable<Model>>);
     }
 }
