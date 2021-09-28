@@ -34,3 +34,5 @@
 Doc 1 works!
 
 ## Titolone
+
+{text:replaceThis}

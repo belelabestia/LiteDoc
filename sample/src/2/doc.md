@@ -31,6 +31,6 @@
 
 Doc 2 works!
 
-## {%replaceThis%}
+## {text:replaceThis}
 
-{%andThis%}
+{text:andThis}
