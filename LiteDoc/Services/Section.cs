@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +11,7 @@ public interface ISection
 {
     string ToHtml(string content, string format);
     Task<byte[]> ToPdf(string html);
-    Task<PdfDocument[]> ToSections(IEnumerable<Configuration.Model> configurations, string srcPath);
+    Task<PdfDocument[]> ToSections(Configuration.Model configuration, string srcPath);
     PdfDocument ToPdfDocument(Stream stream);
 }
 
@@ -21,7 +20,13 @@ public static class Section
     public class Service : ISection
     {
         private IFileSystem fileSystem;
-        public Service(IFileSystem fileSystem) => this.fileSystem = fileSystem;
+        private IParser parser;
+
+        public Service(IFileSystem fileSystem, IParser parser)
+        {
+            this.fileSystem = fileSystem;
+            this.parser = parser;
+        }
 
         public string ToHtml(string content, string format) => format switch
         {
@@ -38,14 +43,16 @@ public static class Section
 
         public PdfDocument ToPdfDocument(Stream stream) => PdfReader.Open(stream, PdfDocumentOpenMode.Import);
 
-        public Task<PdfDocument[]> ToSections(IEnumerable<Configuration.Model> configurations, string srcPath) =>
-            configurations
+        public Task<PdfDocument[]> ToSections(Configuration.Model configuration, string srcPath) => // NOTE isolare Configuration.SectionModel?
+            configuration.Sections
                 .AsParallel()
                 .AsOrdered()
-                .Select(configuration =>
-                    this.fileSystem.MovePathTo(srcPath, configuration.Path)
+                .Select(section =>
+                    this.fileSystem.MovePathTo(srcPath, section.Path)
                         .Pipe(this.fileSystem.GetText)
-                        .Pipe(this.ToHtml(configuration.Format))
+                        .Pipe(this.ToHtml(section.Format))
+                        .With(configuration)
+                        .Pipe(this.parser.Parse)
                         .Pipe(this.ToPdf)
                         .Pipe(this.fileSystem.ToMemoryStream)
                         .Pipe(this.ToPdfDocument)

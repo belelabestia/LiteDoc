@@ -30,40 +30,42 @@ public static class Workspace
             this.jsonService = jsonService;
         }
 
-        public async Task Create(string rootPath, IEnumerable<File> files)
-        {
-            this.fileSystemService.CreateDirectory(rootPath);
+        public Task Create(string rootPath, IEnumerable<File> files) => Task.CompletedTask;
 
-            var configurations = files
-                .AsParallel()
-                .AsOrdered()
-                .Select(file =>
-                {
-                    var format = file.Path.Split('.').Last();
-                    return new Configuration.Model(file.Path, format);
-                })
-                .ToList();
+        // public async Task Create(string rootPath, IEnumerable<File> files)
+        // {
+        //     this.fileSystemService.CreateDirectory(rootPath);
 
-            var json = this.jsonService.Serialize(configurations);
-            var confFileName = this.fileSystemService.MovePathTo(rootPath, Configuration.DefaultFileName);
-            await this.fileSystemService.WriteText(confFileName, json);
-            var srcPath = this.fileSystemService.MovePathTo(rootPath, "src");
-            this.fileSystemService.CreateDirectory(srcPath);
+        //     var configurations = files
+        //         .AsParallel()
+        //         .AsOrdered()
+        //         .Select(file =>
+        //         {
+        //             var format = file.Path.Split('.').Last();
+        //             return new Configuration.Model(file.Path, format);
+        //         })
+        //         .ToList();
 
-            var tasks = files
-                .AsParallel()
-                .AsOrdered()
-                .Select(file =>
-                {
-                    var filePath = this.fileSystemService.MovePathTo(srcPath, file.Path);
-                    var dir = this.fileSystemService.MovePathTo(filePath, "..");
-                    this.fileSystemService.CreateDirectory(dir);
+        //     var json = this.jsonService.Serialize(configurations);
+        //     var confFileName = this.fileSystemService.MovePathTo(rootPath, Configuration.DefaultFileName);
+        //     await this.fileSystemService.WriteText(confFileName, json);
+        //     var srcPath = this.fileSystemService.MovePathTo(rootPath, "src");
+        //     this.fileSystemService.CreateDirectory(srcPath);
 
-                    return this.fileSystemService.WriteText(filePath, file.Content);
-                });
+        //     var tasks = files
+        //         .AsParallel()
+        //         .AsOrdered()
+        //         .Select(file =>
+        //         {
+        //             var filePath = this.fileSystemService.MovePathTo(srcPath, file.Path);
+        //             var dir = this.fileSystemService.MovePathTo(filePath, "..");
+        //             this.fileSystemService.CreateDirectory(dir);
 
-            await Task.WhenAll(tasks);
-        }
+        //             return this.fileSystemService.WriteText(filePath, file.Content);
+        //         });
+
+        //     await Task.WhenAll(tasks);
+        // }
     }
 
     public static IEnumerable<File> DefaultFiles => new[]

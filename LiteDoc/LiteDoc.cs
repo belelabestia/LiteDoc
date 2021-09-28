@@ -21,6 +21,7 @@ public static class LiteDoc
             .AddTransient<IDocument, Document.Service>()
             .AddTransient<IFileSystem, FileSystem.Service>()
             .AddTransient<IWatcher, Watcher.Service>()
+            .AddTransient<IParser, Parser.Service>()
             .AddTransient<IWorkspace, Workspace.Service>()
             .AddTransient<IConsole, Console.Service>();
 

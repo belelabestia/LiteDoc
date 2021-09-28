@@ -1,14 +1,68 @@
-[
-    {
-        "path": "first-page.html",
-        "format": "html"
-    },
-    {
-        "path": "1/doc.md",
-        "format": "md"
-    },
-    {
-        "path": "2/doc.md",
-        "format": "md"
+{
+    "sections": [
+        {
+            "path": "first-page.html",
+            "format": "html"
+        },
+        {
+            "path": "1/doc.md",
+            "format": "md"
+        },
+        {
+            "path": "2/doc.md",
+            "format": "md"
+        }
+    ],
+    "replace": {
+        "text": {
+            "replaceThis": "withThis",
+            "andThis": "withThisOther"
+        },
+        "table": {
+            "versions": [
+                {
+                    "versione": "1",
+                    "autore": "miaomiao",
+                    "data": "11/7/2021",
+                    "descrizione": "rettifiche post trattativa"
+                },
+                {
+                    "versione": "2",
+                    "autore": "miaomiao",
+                    "data": "11/7/2021",
+                    "descrizione": "rettifiche post trattativa"
+                },
+                {
+                    "versione": "3",
+                    "autore": "miaomiao",
+                    "data": "11/7/2021",
+                    "descrizione": "rettifiche post trattativa"
+                },
+                {
+                    "versione": "4",
+                    "autore": "miaomiao",
+                    "data": "11/7/2021",
+                    "descrizione": "rettifiche post trattativa"
+                },
+                {
+                    "versione": "5",
+                    "autore": "miaomiao",
+                    "data": "11/7/2021",
+                    "descrizione": "rettifiche post trattativa"
+                },
+                {
+                    "versione": "6",
+                    "autore": "miaomiao",
+                    "data": "11/7/2021",
+                    "descrizione": "rettifiche post trattativa"
+                }
+            ],
+            "items": [
+                {
+                    "# item": "identity server",
+                    "prezzo": ""
+                }
+            ]
+        }
     }
-]
+}

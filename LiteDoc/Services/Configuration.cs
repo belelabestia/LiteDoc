@@ -1,15 +1,20 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Table = System.Collections.Generic.IEnumerable<System.Collections.Generic.Dictionary<string, string>>;
+
 public interface IConfiguration
 {
-    Task<IEnumerable<Configuration.Model>> GetConfiguration(string rootPath);
+    Task<Configuration.Model> GetConfiguration(string rootPath);
 }
 
 public static class Configuration
 {
     public const string DefaultFileName = "litedoc.conf.json";
-    public record Model(string Path, string Format);
+    public record Section(string Path, string Format);
+    public record Replace(Dictionary<string, string> Text, Dictionary<string, Table> Table);
+    public record Model(IEnumerable<Section> Sections, Replace Replace);
+
     public class Service : IConfiguration
     {
         private IFileSystem fileSystem;
@@ -24,10 +29,10 @@ public static class Configuration
             this.json = json;
         }
 
-        public Task<IEnumerable<Model>> GetConfiguration(string rootPath) =>
+        public Task<Model> GetConfiguration(string rootPath) =>
             rootPath
                 .Pipe(rootPath => this.fileSystem.MovePathTo(rootPath, Configuration.DefaultFileName))
                 .Pipe(this.fileSystem.GetText)
-                .Pipe(this.json.Deserialize<IEnumerable<Model>>);
+                .Pipe(this.json.Deserialize<Model>);
     }
 }
