@@ -1,4 +1,5 @@
 {
+    "style": "assets/github.css",
     "sections": [
         {
             "path": "first-page.html",

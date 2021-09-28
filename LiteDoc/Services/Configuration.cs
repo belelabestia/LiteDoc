@@ -13,7 +13,7 @@ public static class Configuration
     public const string DefaultFileName = "litedoc.conf.json";
     public record Section(string Path, string Format);
     public record Replace(Dictionary<string, string> Text, Dictionary<string, Table> Table);
-    public record Model(IEnumerable<Section> Sections, Replace Replace);
+    public record Model(string Style, IEnumerable<Section> Sections, Replace Replace);
 
     public class Service : IConfiguration
     {

@@ -9,14 +9,12 @@ using PdfSharp.Pdf.IO;
 
 public interface ISection
 {
-    string ToHtml(string content, string format);
-    Task<byte[]> ToPdf(string html);
     Task<PdfDocument[]> ToSections(Configuration.Model configuration, string srcPath);
-    PdfDocument ToPdfDocument(Stream stream);
 }
 
 public static class Section
 {
+
     public class Service : ISection
     {
         private IFileSystem fileSystem;
@@ -28,22 +26,7 @@ public static class Section
             this.parser = parser;
         }
 
-        public string ToHtml(string content, string format) => format switch
-        {
-            "html" => content + Environment.NewLine,
-            "md" => Markdown.ToHtml(content),
-            _ => throw new Exception("Invalid format.")
-        };
-
-        public Task<byte[]> ToPdf(string html)
-        {
-            using var weasy = new WeasyPrintClient();
-            return weasy.GeneratePdfAsync(html);
-        }
-
-        public PdfDocument ToPdfDocument(Stream stream) => PdfReader.Open(stream, PdfDocumentOpenMode.Import);
-
-        public Task<PdfDocument[]> ToSections(Configuration.Model configuration, string srcPath) => // NOTE isolare Configuration.SectionModel?
+        public Task<PdfDocument[]> ToSections(Configuration.Model configuration, string srcPath) =>
             configuration.Sections
                 .AsParallel()
                 .AsOrdered()
@@ -51,8 +34,9 @@ public static class Section
                     this.fileSystem.MovePathTo(srcPath, section.Path)
                         .Pipe(this.fileSystem.GetText)
                         .Pipe(this.ToHtml(section.Format))
-                        .With(configuration)
-                        .Pipe(this.parser.Parse)
+                        .With(this.GetStyle(configuration, srcPath))
+                        .Pipe(this.PrependStyleToHtml)
+                        .Pipe(html => this.parser.Parse(html, configuration))
                         .Pipe(this.ToPdf)
                         .Pipe(this.fileSystem.ToMemoryStream)
                         .Pipe(this.ToPdfDocument)
@@ -61,5 +45,27 @@ public static class Section
 
         private Func<string, string> ToHtml(string format) =>
             text => this.ToHtml(text, format);
+
+        private string ToHtml(string content, string format) => format switch
+        {
+            "html" => content + Environment.NewLine,
+            "md" => Markdown.ToHtml(content),
+            _ => throw new Exception("Invalid format.")
+        };
+
+        private string PrependStyleToHtml(string html, string style) => $"<style>{style}</style>{html}";
+
+        private Task<string> GetStyle(Configuration.Model configuration, string srcPath) =>
+            srcPath
+                .Pipe(path => this.fileSystem.MovePathTo(path, configuration.Style))
+                .Pipe(this.fileSystem.GetText);
+
+        private Task<byte[]> ToPdf(string html)
+        {
+            using var weasy = new WeasyPrintClient();
+            return weasy.GeneratePdfAsync(html);
+        }
+
+        private PdfDocument ToPdfDocument(Stream stream) => PdfReader.Open(stream, PdfDocumentOpenMode.Import);
     }
 }

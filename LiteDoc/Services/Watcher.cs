@@ -13,7 +13,13 @@ public static class Watcher
     public class Service : IWatcher
     {
         private IFileSystem fileSystem;
-        public Service(IFileSystem fileSystem) => this.fileSystem = fileSystem;
+        private IConsole console;
+
+        public Service(IFileSystem fileSystem, IConsole console)
+        {
+            this.fileSystem = fileSystem;
+            this.console = console;
+        }
 
         public void Start(string rootPath, Func<Task> handler)
         {
@@ -48,7 +54,10 @@ public static class Watcher
                     {
                         await handler();
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        this.console.Print(ex.Message);
+                    }
 
                     inUse = false;
                 };

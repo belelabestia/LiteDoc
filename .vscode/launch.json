@@ -10,7 +10,10 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/bin/Debug/net5.0/LiteDoc.dll",
-            "args": ["run", "sample"],
+            "args": [
+                "run",
+                "sample"
+            ],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
             "stopAtEntry": false

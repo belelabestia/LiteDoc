@@ -80,10 +80,16 @@ public static class LiteDoc
                 .Pipe(this.section.ToSections)
                 .Effect(() => this.console.Print("Successfully parsed sections."))
                 .With(this.fileSystem.MovePathTo(args.Path, "dist"))
-                .Pipe((PdfDocument[] secs, string distPath) => this.document.WriteDocument(secs, distPath, "output.pdf"))
+                .Effect((PdfDocument[] secs, string distPath) => this.document.WriteDocument(secs, distPath, "output.pdf"))
                 .Effect(() => this.console.Print("LiteDoc pipeline succeded."));
 
-        public void Watch() => this.watcher.Start(this.args.Path, this.Run);
+        public async Task Watch()
+        {
+            await this.Run();
+            this.watcher.Start(this.args.Path, this.Run);
+            this.console.Print($"Started watching on folder {this.args.Path}");
+        }
+
         public Task New() => this.workspace.Create(this.args.Path, Workspace.DefaultFiles);
     }
 
@@ -113,7 +119,7 @@ public static class LiteDoc
                     this.lifetime.StopApplication();
                     return;
                 case "watch":
-                    this.liteDoc.Watch();
+                    await this.liteDoc.Watch();
                     return;
                 case "new":
                     await this.liteDoc.New();
